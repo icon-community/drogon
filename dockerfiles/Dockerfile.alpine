@@ -1,0 +1,20 @@
+ARG ALPINE_VERSION
+FROM alpine:${ALPINE_VERSION}
+
+RUN apk add --no-cache openjdk11-jdk build-base coreutils git
+ENV JAVA_HOME /usr/lib/jvm/default-jvm
+
+COPY src/thirdparty/icon/gradlew /goloop/
+COPY src/thirdparty/icon/gradle/ /goloop/gradle/
+
+WORKDIR /goloop
+
+RUN ./gradlew tasks \
+    && find ~/.gradle/ -name "*.lock" -type f -delete
+
+# install golang
+COPY --from=golang:1.13-alpine /usr/local/go/ /usr/local/go/
+
+ENV PATH="/usr/local/go/bin:${PATH}"
+
+CMD ["tail", "-f", "/dev/null"]
