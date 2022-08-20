@@ -8,7 +8,7 @@ name: Build and publish the Drogon image
       - 'dev-0.1.0'
 
 jobs:
-  build-goloop-image:
+  build-drogon-image:
     runs-on: ubuntu-latest
     permissions:
       contents: read

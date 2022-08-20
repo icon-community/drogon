@@ -1,5 +1,4 @@
-ARG ALPINE_VERSION
-FROM alpine:${ALPINE_VERSION}
+FROM alpine:3.14
 
 RUN apk add --no-cache openjdk11-jdk build-base coreutils git
 ENV JAVA_HOME /usr/lib/jvm/default-jvm
