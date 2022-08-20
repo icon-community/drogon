@@ -35,6 +35,7 @@ jobs:
 
       - name: Build gochain-image
         run: make gochain-image
+        working-directory: goloop
 
       - name: Push gochain-image to ghcr
         run: docker tag goloop/gochain:latest ghcr.io/${{ github.actor }}/drogon:latest

@@ -30,7 +30,9 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build Drogon
+        uses: docker/build-push-action@v3
         with:
+          push: false
           context: .
           file: ./dockerfiles/Dockerfile.alpine
           tags: drogon:${{ steps.repository.outputs.tag }}
