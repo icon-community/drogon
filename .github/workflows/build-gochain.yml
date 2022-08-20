@@ -38,5 +38,7 @@ jobs:
         working-directory: goloop
 
       - name: Push gochain-image to ghcr
-        run: docker tag goloop/gochain:latest ghcr.io/${{ github.actor }}/drogon:latest
+        run: |
+          docker tag goloop/gochain:latest ghcr.io/${{ github.actor }}/gochain:${{ steps.repository.outputs.tag }}
+          docker push ghcr.io/${{ github.actor }}/gochain:${{ steps.repository.outputs.tag }}
         working-directory: goloop

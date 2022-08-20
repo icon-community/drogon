@@ -38,4 +38,6 @@ jobs:
           tags: drogon:${{ steps.repository.outputs.tag }}
 
       - name: Push Drogon to ghcr
-        run: docker tag drogon:${{ steps.repository.outputs.tag }} ghcr.io/${{ github.actor }}/drogon:${{ steps.repository.outputs.tag }}
+        run: |
+        docker tag drogon:${{ steps.repository.outputs.tag }} ghcr.io/${{ github.actor }}/drogon:${{ steps.repository.outputs.tag }}
+        docker push ghcr.io/${{ github.actor }}/drogon:${{ steps.repository.outputs.tag }}
