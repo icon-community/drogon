@@ -34,5 +34,5 @@ jobs:
           push: true
           context: .
           file: ./dockerfiles/Dockerfile.alpine
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/drogon:${{ steps.repository.outputs.tag }}
+          tags: iconcommunity/drogon:${{ steps.repository.outputs.tag }}
           
