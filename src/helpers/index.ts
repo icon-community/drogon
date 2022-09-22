@@ -3,7 +3,6 @@ import {textSync} from 'figlet';
 import {exit} from 'process';
 import chalk from 'chalk';
 import signale from 'signale';
-import {program} from 'commander';
 
 export const banner = function () {
   const banner = textSync('Drogon!', {
@@ -44,6 +43,37 @@ export const ensureCWDDrogonProject = (projectPath: string) => {
   if (checkIfFileExists(`${projectPath}/drogon-config.json`)) return;
 
   panic('Please run the command inside the Drogon Project');
+};
+
+function removeItemOnce(arr: any, value: string) {
+  var index = arr.indexOf(value);
+  if (index > -1) {
+    arr.splice(index, 1);
+  }
+  return arr;
+}
+
+export const listAvailableContracts = (projectPath: string, cb: any) => {
+  if (!checkIfFileExists(`${projectPath}/drogon-config.json`))
+    panic('Please run the command inside the Drogon Project');
+
+  let projects: any = {};
+
+  fs.readdir(`${projectPath}/src`, (err, files) => {
+    if (err) {
+      return console.log('Unable to scan directory: ' + err);
+    }
+
+    files = removeItemOnce(files, 'build');
+
+    files.forEach(function (file) {
+      if (fs.lstatSync(`${projectPath}/src/${file}`).isDirectory()) {
+        projects[file] = `${projectPath}/src/${file}`;
+      }
+    });
+
+    cb(projects);
+  });
 };
 
 export class ProgressBar {

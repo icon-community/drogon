@@ -1,21 +1,38 @@
 import signale from 'signale';
 import {DROGON_IMAGE} from '../constants';
-import {ensureCWDDrogonProject, panic, ProgressBar} from '../helpers';
+import {
+  ensureCWDDrogonProject,
+  listAvailableContracts,
+  panic,
+  ProgressBar,
+} from '../helpers';
 import {dockerInit} from '../helpers/docker';
 
-export const compileContracts = (projectPath: string, args: any) => {
+export const optimizeContracts = (projectPath: string, args: any) => {
   ensureCWDDrogonProject(projectPath);
 
-  signale.pending('Compiling contracts');
-  mountAndCompile(projectPath, args, (exitCode: any) => {
-    signale.success('Done');
-    process.exit(exitCode);
+  signale.pending('Deploying contracts');
+
+  listAvailableContracts(projectPath, (projects: any) => {
+    for (var i in projects) {
+      let command = `/goloop/gradlew --build-cache -g /goloop/app/.cache/ src:${i}:optimizedJar`;
+
+      mountAndCompile(projectPath, args, command, (exitCode: any) => {
+        signale.success('Done');
+        if (exitCode != 0) process.exit(exitCode);
+      });
+    }
   });
 };
 
-export const mountAndCompile = (projectPath: string, args: any, cb: any) => {
+export const mountAndCompile = (
+  projectPath: string,
+  args: any,
+  command: string,
+  cb: any
+) => {
   let docker = dockerInit();
-  let command = `/goloop/gradlew --build-cache -g /goloop/app/.cache/ build`;
+
   if (args) command = `${command} ${args.join(' ')}`;
 
   docker.createContainer(

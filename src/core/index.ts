@@ -2,8 +2,14 @@ import {basename, resolve} from 'path';
 import prompts from 'prompts';
 import * as fs from 'fs';
 import * as scaffold from './scaffold';
-import {checkIfFileExists, panic, ProgressBar, safeexit} from '../helpers';
-import {pullImage} from '../helpers/docker';
+import {
+  checkIfFileExists,
+  ensureCWDDrogonProject,
+  panic,
+  ProgressBar,
+  safeexit,
+} from '../helpers';
+import {dockerInit, pullImage} from '../helpers/docker';
 
 import {DROGON_IMAGE, GOCHAIN_IMAGE, ICON_TEMPLATES_REPO} from '../constants';
 import {mainBuildGradle, gradleSettings} from './contents';
@@ -80,7 +86,7 @@ export const createNewProject = async () => {
   if (response.createSamples) {
     const boilerplate = await pickABoilerplate();
     await scaffoldProject(boilerplate, ICON_TEMPLATES_REPO, projectPath);
-    await addProjectToIncludes(projectPath, boilerplate);
+    await initProjectIncludes(projectPath, boilerplate);
   }
 };
 
@@ -134,10 +140,16 @@ const initialiseProject = async (path: string) => {
   return name;
 };
 
-const addProjectToIncludes = async (path: string, boilerplate: string) => {
+export const addProjectToIncludes = async (
+  path: string,
+  boilerplate: string
+) => {};
+
+const initProjectIncludes = async (path: string, boilerplate: string) => {
   let includes = `include(
-        'src/${boilerplate}'
+        'src:${boilerplate}'
     )`;
+
   fs.readFile(`${path}/settings.gradle`, 'utf8', function (err, data) {
     if (err) {
       return console.log(err);
@@ -148,4 +160,69 @@ const addProjectToIncludes = async (path: string, boilerplate: string) => {
       if (err) return console.log(err);
     });
   });
+};
+
+export const gradleCommands = async (projectPath: string, args: any) => {
+  ensureCWDDrogonProject(projectPath);
+  signale.pending('Running gradle command');
+
+  mountAndRunGradle(projectPath, args, () => {
+    signale.success('Done');
+  });
+};
+
+const mountAndRunGradle = async (projectPath: string, args: any, cb: any) => {
+  let docker = dockerInit();
+  let command = `/goloop/gradlew --build-cache -g /goloop/app/.cache/`;
+  if (args) command = `${command} ${args.join(' ')}`;
+
+  docker.createContainer(
+    {
+      Image: DROGON_IMAGE,
+      HostConfig: {
+        AutoRemove: true,
+        Binds: [`${projectPath}:/goloop/app`],
+      },
+      Tty: false,
+    },
+    function (err, container: any) {
+      if (err) panic(err);
+      container.start(function (err: any, stream: any) {
+        container.exec(
+          {
+            Cmd: ['sh', '-c', command],
+            AttachStderr: true,
+            AttachStdout: true,
+            WorkingDir: '/goloop/app',
+          },
+          function (err: any, exec: any) {
+            exec.start(
+              {Tty: false, Detach: false},
+              function (err: any, stream: any) {
+                docker.modem.demuxStream(
+                  stream,
+                  process.stdout,
+                  process.stderr
+                );
+              }
+            );
+
+            let id = setInterval(() => {
+              exec.inspect({}, (err: any, status: any) => {
+                if (status.Running == false) {
+                  container.stop({}, () => {});
+                  clearInterval(id);
+                  cb();
+                }
+              });
+            }, 100);
+          }
+        );
+      });
+
+      container.attach({}, function (err: any, stream: any) {
+        stream.pipe(process.stdout);
+      });
+    }
+  );
 };
