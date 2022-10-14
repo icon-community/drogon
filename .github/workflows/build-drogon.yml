@@ -33,6 +33,6 @@ jobs:
         with:
           push: true
           context: .
-          file: ./dockerfiles/Dockerfile.alpine
+          file: ./dockerfiles/Dockerfile.debian
           tags: iconcommunity/drogon:${{ steps.repository.outputs.tag }}
           
