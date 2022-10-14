@@ -5,9 +5,7 @@ services:
 
     build:
       context: .
-      dockerfile: dockerfiles/Dockerfile.alpine
-      args:
-        - ALPINE_VERSION=3.14
+      dockerfile: dockerfiles/Dockerfile.debian
 
     container_name: drogon
     networks:
