@@ -8,7 +8,7 @@ name: Build and publish the Drogon image
       - 'dev-0.1.0'
 
 jobs:
-  build-goloop-image:
+  build-drogon-image:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -22,19 +22,17 @@ jobs:
         id: repository
         run: echo  "::set-output name=tag::$(cat package.json|grep '"version'|cut -d '"' -f4)"
 
-      - name: Log in to the Container registry
+      - name: Log in to docker hub registry
         uses: docker/login-action@v2
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
-      - name: Build Drogon
+      - name: Build & push container to docker hub
+        uses: docker/build-push-action@v3
         with:
+          push: true
           context: .
           file: ./dockerfiles/Dockerfile.alpine
-          tags: drogon:${{ steps.repository.outputs.tag }}
-
-      - name: Push Drogon to ghcr
-        run: docker tag drogon:${{ steps.repository.outputs.tag }} ghcr.io/${{ github.actor }}/drogon:${{ steps.repository.outputs.tag }}
-        working-directory: goloop
+          tags: iconcommunity/drogon:${{ steps.repository.outputs.tag }}
+          
