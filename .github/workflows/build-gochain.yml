@@ -26,18 +26,16 @@ jobs:
           ref: ${{ steps.repository.outputs.tag }}
           path: goloop
 
-      - name: Log in to docker hub registry
+      - name: Log in to the Container registry
         uses: docker/login-action@v2
         with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build gochain-image
         run: make gochain-image
-        working-directory: goloop
 
-      - name: Push gochain-image to docker hub
-        run: |
-          docker tag goloop/gochain:latest iconcommunity/gochain:${{ steps.repository.outputs.tag }}
-          docker push iconcommunity/gochain:${{ steps.repository.outputs.tag }}
+      - name: Push gochain-image to ghcr
+        run: docker tag goloop/gochain:latest ghcr.io/${{ github.actor }}/drogon:latest
         working-directory: goloop

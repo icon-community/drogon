@@ -9,7 +9,8 @@ ENV LANG en_US.utf8
 
 # Setup Java & Gradle
 RUN apt-get update && apt-get install -y openjdk-11-jdk build-essential coreutils git python curl
-ENV JAVA_HOME /usr/lib/jvm/default-jvm
+
+ENV JAVA_HOME /usr/lib/jvm/java-11-openjdk-amd64/
 
 COPY src/thirdparty/icon/gradlew /goloop/
 COPY src/thirdparty/icon/gradle/ /goloop/gradle/

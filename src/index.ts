@@ -10,6 +10,14 @@ import {compileContracts} from './compile';
 import {testContracts} from './test';
 import {deployContracts} from './deploy';
 import {optimizeContracts} from './deploy/optimize';
+import {generateKeystore} from './goloop';
+import {
+  initSandbox,
+  pauseSandbox,
+  startSandbox,
+  stopSandbox,
+  unpauseSandbox,
+} from './sandbox';
 
 const main = async () => {
   banner();
@@ -83,6 +91,81 @@ const main = async () => {
       let path = resolve(this.opts().path);
       deployContracts(path, this.args);
     });
+
+  program
+    .command('keystore')
+    .allowUnknownOption()
+    .description('Generate keystore')
+    .option('-p, --path [string]', 'Path of your Drogon Project', './')
+    .option('-s, --password [string]', 'Password for the keystore', 'gochain')
+    .action(function (this: any) {
+      let path = resolve(this.opts().path);
+      generateKeystore(path, this.args);
+    });
+
+  program
+    .command('goloop')
+    .allowUnknownOption()
+    .description('Run goloop commands against the Drogon project')
+    .option('-p, --path [string]', 'Path of your Drogon Project', './')
+    .action(function (this: any) {
+      let path = resolve(this.opts().path);
+      generateKeystore(path, this.args);
+    });
+
+  let sandbox = program
+    .command('sandbox')
+    .description('Run a local network in the Drogon project');
+
+  sandbox
+    .command('init')
+    .allowUnknownOption()
+    .description('initialize the local network')
+    .option('-p, --path [string]', 'Path of your Drogon Project', './')
+    .action(function (this: any) {
+      let path = resolve(this.opts().path);
+      initSandbox(path, this.args);
+    });
+
+  sandbox
+    .command('start')
+    .allowUnknownOption()
+    .description('start the local network')
+    .option('-p, --path [string]', 'Path of your Drogon Project', './')
+    .action(function (this: any) {
+      let path = resolve(this.opts().path);
+      startSandbox(path, this.args);
+    });
+
+  sandbox
+    .command('stop')
+    .allowUnknownOption()
+    .description('stop the local network')
+    .option('-p, --path [string]', 'Path of your Drogon Project', './')
+    .action(function (this: any) {
+      let path = resolve(this.opts().path);
+      stopSandbox(path, this.args);
+    });
+
+  // sandbox
+  //   .command('pause')
+  //   .allowUnknownOption()
+  //   .description('pause the local network')
+  //   .option('-p, --path [string]', 'Path of your Drogon Project', './')
+  //   .action(function (this: any) {
+  //     let path = resolve(this.opts().path);
+  //     pauseSandbox(path, this.args);
+  //   });
+
+  // sandbox
+  //   .command('unpause')
+  //   .allowUnknownOption()
+  //   .description('start the local network')
+  //   .option('-p, --path [string]', 'Path of your Drogon Project', './')
+  //   .action(function (this: any) {
+  //     let path = resolve(this.opts().path);
+  //     unpauseSandbox(path, this.args);
+  //   });
 
   program.parse();
 };

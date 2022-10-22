@@ -9,10 +9,10 @@ import {
   ProgressBar,
   safeexit,
 } from '../helpers';
-import {dockerInit, pullImage} from '../helpers/docker';
+import {dockerInit, mountAndRunCommand, pullImage} from '../helpers/docker';
 
 import {DROGON_IMAGE, GOCHAIN_IMAGE, ICON_TEMPLATES_REPO} from '../constants';
-import {mainBuildGradle, gradleSettings} from './contents';
+import {mainBuildGradle, gradleSettings, gitignore} from './contents';
 import {Config} from './config';
 import {scaffoldProject} from './scaffold';
 import signale from 'signale';
@@ -126,6 +126,10 @@ const initialiseProject = async (path: string) => {
     }
   );
 
+  fs.writeFile(`${path}/.gitignore`, gitignore, err => {
+    if (err) panic(`Failed to create .gitignore. ${err}`);
+  });
+
   fs.writeFile(`${path}/build.gradle`, mainBuildGradle, err => {
     if (err) panic(`Failed to create build.gradle. ${err}`);
   });
@@ -166,63 +170,13 @@ export const gradleCommands = async (projectPath: string, args: any) => {
   ensureCWDDrogonProject(projectPath);
   signale.pending('Running gradle command');
 
-  mountAndRunGradle(projectPath, args, () => {
+  mountAndRunGradle(projectPath, args, (exitCode: any) => {
     signale.success('Done');
+    process.exit(exitCode);
   });
 };
 
 const mountAndRunGradle = async (projectPath: string, args: any, cb: any) => {
-  let docker = dockerInit();
   let command = `/goloop/gradlew --build-cache -g /goloop/app/.cache/`;
-  if (args) command = `${command} ${args.join(' ')}`;
-
-  docker.createContainer(
-    {
-      Image: DROGON_IMAGE,
-      HostConfig: {
-        AutoRemove: true,
-        Binds: [`${projectPath}:/goloop/app`],
-      },
-      Tty: false,
-    },
-    function (err, container: any) {
-      if (err) panic(err);
-      container.start(function (err: any, stream: any) {
-        container.exec(
-          {
-            Cmd: ['sh', '-c', command],
-            AttachStderr: true,
-            AttachStdout: true,
-            WorkingDir: '/goloop/app',
-          },
-          function (err: any, exec: any) {
-            exec.start(
-              {Tty: false, Detach: false},
-              function (err: any, stream: any) {
-                docker.modem.demuxStream(
-                  stream,
-                  process.stdout,
-                  process.stderr
-                );
-              }
-            );
-
-            let id = setInterval(() => {
-              exec.inspect({}, (err: any, status: any) => {
-                if (status.Running == false) {
-                  container.stop({}, () => {});
-                  clearInterval(id);
-                  cb();
-                }
-              });
-            }, 100);
-          }
-        );
-      });
-
-      container.attach({}, function (err: any, stream: any) {
-        stream.pipe(process.stdout);
-      });
-    }
-  );
+  mountAndRunCommand(projectPath, args, command, cb);
 };

@@ -21,7 +21,7 @@ export const scaffoldProject = async (
 };
 
 // Checks if the repository exists
-const verifySourcePath = async (repo: string) => {
+export const verifySourcePath = async (repo: string) => {
   let repoUrl = `https://github.com/${repo}`;
 
   try {

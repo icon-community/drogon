@@ -20,39 +20,10 @@ yarn drogon install
 
 ## Usage
 
-```sh
-> yarn run drogon -h
- _ .-') _  _  .-')                                             .-') _ ,---.
-( (  OO) )( \( -O )                                           ( OO ) )|   |
- \     .'_ ,------.  .-'),-----.   ,----.     .-'),-----. ,--./ ,--,' |   |
- ,`'--..._)|   /`. '( OO'  .-.  ' '  .-./-') ( OO'  .-.  '|   \ |  |\ |   |
- |  |  \  '|  /  | |/   |  | |  | |  |_( O- )/   |  | |  ||    \|  | )|   |
- |  |   ' ||  |_.' |\_) |  |\|  | |  | .--, \\_) |  |\|  ||  .     |/ |  .'
- |  |   / :|  .  '.'  \ |  | |  |(|  | '. (_/  \ |  | |  ||  |\    |  `--'
- |  '--'  /|  |\  \    `'  '-'  ' |  '--'  |    `'  '-'  '|  | \   |  .--.
- `-------' `--' '--'     `-----'   `------'       `-----' `--'  `--'  '--'
-Usage: Drogon [options] [command]
-
-Compile, Test and Deploy ICON Contracts with ease!
-
-Options:
-  -V, --version       output the version number
-  -h, --help          display help for command
-
-Commands:
-  install             Installs required SCORE dependencies
-  init                Initialize a new Drogon project
-  compile [options]   Compile the Drogon contracts
-  test [options]      Run the tests against the Drogon contracts
-  gradlew [options]   Run gradlew commands against the Drogon project
-  optimize [options]  Optmize contracts from the Drogon project
-  deploy [options]    Deploy contracts from the Drogon project
-  help [command]      display help for command
-```
 ### drogon init
 
 ```sh
-yarn drogon init
+yarn drogon  init
 ```
 
 ### drogon compile
@@ -61,30 +32,6 @@ yarn drogon init
 yarn drogon compile --help
 yarn drogon compile -p /path/to/drogon/project
 yarn drogon compile -p /path/to/drogon/project <gradle flags here>
-```
-
-### drogon test
-```sh
-yarn drogon test -p /path/to/drogon/project
-yarn drogon test -p /path/to/drogon/project <gradle flags here>
-```
-
-### drogon gradlew
-```sh
-yarn drogon gradlew -p /path/to/drogon/project
-yarn drogon gradlew -p /path/to/drogon/project <gradle commands here>
-```
-
-### drogon optimize
-```sh
-yarn drogon optimize -p /path/to/drogon/project
-yarn drogon optimize -p /path/to/drogon/project <gradle commands here>
-```
-
-### drogon deploy
-```sh
-yarn drogon deploy -p /path/to/drogon/project
-yarn drogon deploy -p /path/to/drogon/project <gradle commands here>
 ```
 
 ### Features
