@@ -1,6 +1,6 @@
 export const DROGON_IMAGE = 'iconcommunity/drogon:0.1.0';
 
-export const GOCHAIN_IMAGE = 'goloop/gochain-icon:latest';
+export const GOCHAIN_IMAGE = 'iconcommunity/gochain:v1.2.14';
 
 export const ICON_SANDBOX_DATA_REPO = 'icon-project/gochain-local';
 
