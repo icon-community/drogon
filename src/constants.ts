@@ -1,4 +1,4 @@
-export const DROGON_IMAGE = 'drogon:latest'; //'iconcommunity/drogon:0.1.0';
+export const DROGON_IMAGE = 'iconcommunity/drogon:0.1.0';
 
 export const GOCHAIN_IMAGE = 'goloop/gochain-icon:latest';
 
