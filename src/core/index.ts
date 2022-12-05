@@ -1,7 +1,6 @@
 import {basename, resolve} from 'path';
 import prompts from 'prompts';
 import * as fs from 'fs';
-import * as scaffold from './scaffold';
 import {
   checkIfFileExists,
   ensureCWDDrogonProject,
@@ -9,7 +8,7 @@ import {
   ProgressBar,
   safeexit,
 } from '../helpers';
-import {dockerInit, mountAndRunCommand, pullImage} from '../helpers/docker';
+import {mountAndRunCommand, pullImage} from '../helpers/docker';
 
 import {DROGON_IMAGE, GOCHAIN_IMAGE, ICON_TEMPLATES_REPO} from '../constants';
 import {mainBuildGradle, gradleSettings, gitignore} from './contents';
@@ -77,7 +76,7 @@ export const createNewProject = async () => {
       },
     ]);
 
-    if (response.overwrite == false) {
+    if (response.overwrite === false) {
       safeexit();
     }
   }
@@ -145,10 +144,12 @@ const initialiseProject = async (path: string) => {
   return name;
 };
 
+/*eslint-disable */
 export const addProjectToIncludes = async (
   path: string,
   boilerplate: string
 ) => {};
+/*eslint-disable */
 
 const initProjectIncludes = async (path: string, boilerplate: string) => {
   const includes = `include(

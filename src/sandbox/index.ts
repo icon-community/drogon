@@ -3,15 +3,12 @@ import {basename} from 'path';
 import {
   DROGON_IMAGE,
   GOCHAIN_IMAGE,
-  ICON_CONFIG,
-  ICON_GENESIS,
-  ICON_ICONEE_CONFIG,
   ICON_ICONENV,
   ICON_SANDBOX_DATA_REPO,
 } from '../constants';
 import {verifySourcePath} from '../core/scaffold';
 import {ensureCWDDrogonProject, panic, ProgressBar} from '../helpers';
-import {dockerInit, mountAndRunCommand} from '../helpers/docker';
+import {dockerInit} from '../helpers/docker';
 
 const sandbox_folder = '.drogon/sandbox';
 
@@ -36,6 +33,7 @@ const fetchProject = async (source: string, destination: string) => {
       AttachStderr: true,
       WorkingDir: '/home',
     },
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     (err: any, data: any, container: any) => {
       if (err) panic(`Failed to fetch boilerplate. ${err}`);
     }
@@ -43,10 +41,12 @@ const fetchProject = async (source: string, destination: string) => {
 };
 
 export const scaffoldSandboxData = async (
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   projectName: string,
   repo: string,
   destination: string
 ) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const branch = 'master';
   const progressBar = new ProgressBar('Scaffolding...', 100);
   progressBar.start();
@@ -55,7 +55,7 @@ export const scaffoldSandboxData = async (
   await fetchProject(repo, destination);
   progressBar.stopWithMessage('Scaffolding done 🎉');
 };
-
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const initSandbox = (projectPath: string, args: any) => {
   // TODO:
   // - add config initializations
@@ -78,13 +78,14 @@ export const initSandbox = (projectPath: string, args: any) => {
       console.log(error);
     });
 };
-
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const startSandbox = (projectPath: string, args: any) => {
   console.log(`${projectPath}./${sandbox_folder}/single`);
   ensureCWDDrogonProject(projectPath);
   runSandboxCommand(projectPath, '');
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const stopSandbox = (projectPath: string, args: any) => {
   ensureCWDDrogonProject(projectPath);
 
@@ -100,11 +101,11 @@ export const stopSandbox = (projectPath: string, args: any) => {
     console.log('Shutting down sandbox successful.');
   });
 };
-
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const pauseSandbox = (projectPath: string, args: any) => {
   ensureCWDDrogonProject(projectPath);
 };
-
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const unpauseSandbox = (projectPath: string, args: any) => {
   ensureCWDDrogonProject(projectPath);
 };
@@ -136,6 +137,7 @@ export const runSandboxCommand = async (
     },
     (err, container: any) => {
       if (err) panic(err);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       container.start((err: any, stream: any) => {
         if (err) panic(err);
         container.exec(

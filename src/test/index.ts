@@ -1,7 +1,6 @@
 import signale from 'signale';
-import {DROGON_IMAGE} from '../constants';
-import {ensureCWDDrogonProject, panic, ProgressBar} from '../helpers';
-import {dockerInit, mountAndRunCommand} from '../helpers/docker';
+import {ensureCWDDrogonProject} from '../helpers';
+import {mountAndRunCommand} from '../helpers/docker';
 
 export const testContracts = (projectPath: string, args: any) => {
   ensureCWDDrogonProject(projectPath);

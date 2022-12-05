@@ -1,5 +1,4 @@
 import axios from 'axios';
-import chalk from 'chalk';
 import {basename} from 'path';
 import {DROGON_IMAGE} from '../../constants';
 
@@ -43,6 +42,7 @@ const fetchProject = async (
   projectName: string,
   source: string,
   destination: string,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   branch: string
 ) => {
   const url = `https://github.com/${source}`;
@@ -65,10 +65,11 @@ const fetchProject = async (
       AttachStderr: true,
       WorkingDir: '/home',
     },
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     (err: any, data: any, container: any) => {
       if (err) panic(`Failed to fetch boilerplate. ${err}`);
     }
   );
-
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   container.on('stream', (stream: any) => {});
 };

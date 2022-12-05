@@ -1,10 +1,8 @@
-import prompts from 'prompts';
-
 enum Deployment {
   DeployJar = 0,
   DeployGoloop = 1,
 }
-
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 interface Compiler {
   gradle_version: string;
 }

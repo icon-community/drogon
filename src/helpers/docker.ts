@@ -12,8 +12,9 @@ export const pullImage = async (image: string) => {
     .pull(image)
     .then(stream => {
       docker.modem.followProgress(stream, onFinished, onProgress);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       function onFinished(err: any, output: any) {}
-
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       function onProgress(event: any) {
         // let status = event.status
         // let progress = event.progress
@@ -64,6 +65,7 @@ export const mountAndRunCommand = (
     },
     (err, container: any) => {
       if (err) panic(err);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       container.start((err: any, stream: any) => {
         container.exec(
           {
@@ -79,7 +81,7 @@ export const mountAndRunCommand = (
 
             const id = setInterval(() => {
               exec.inspect({}, (err: any, status: any) => {
-                if (status.Running == false) {
+                if (status.Running === false) {
                   clearInterval(id);
                   container.stop({}, () => {
                     cb(status.ExitCode);

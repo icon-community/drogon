@@ -108,7 +108,7 @@ export class ProgressBar {
 
   start() {
     this.intervalID = setInterval(() => {
-      if (this._pos == this.progressBar.length) this._pos = 0;
+      if (this._pos === this.progressBar.length) this._pos = 0;
 
       process.stdout.clearLine(0);
       process.stdout.write(`\b\r${this.progressBar[this._pos]}`);

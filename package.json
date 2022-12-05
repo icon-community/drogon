@@ -21,7 +21,6 @@
     "predrogon": "node -p \"'export const LIB_VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/version.ts",
     "drogon": "npx ts-node src/index.ts",
     "refresh": "npm run clean && npm install",
-    "fix": "npx gts fix",
     "prepare": "npm run compile",
     "pretest": "npm run compile",
     "posttest": "npm run lint",

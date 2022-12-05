@@ -11,13 +11,7 @@ import {testContracts} from './test';
 import {deployContracts} from './deploy';
 import {optimizeContracts} from './deploy/optimize';
 import {generateKeystore} from './goloop';
-import {
-  initSandbox,
-  pauseSandbox,
-  startSandbox,
-  stopSandbox,
-  unpauseSandbox,
-} from './sandbox';
+import {initSandbox, startSandbox, stopSandbox} from './sandbox';
 
 const main = async () => {
   banner();
@@ -31,6 +25,7 @@ const main = async () => {
   program
     .command('install')
     .description('Installs required SCORE dependencies')
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     .action(async (str, options) => {
       await install();
     });
