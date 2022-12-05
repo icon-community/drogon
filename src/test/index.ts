@@ -7,7 +7,7 @@ export const testContracts = (projectPath: string, args: any) => {
   ensureCWDDrogonProject(projectPath);
 
   signale.pending('Testing contracts');
-  let command = `/goloop/gradlew --build-cache -g /goloop/app/.cache/ test`;
+  const command = '/goloop/gradlew --build-cache -g /goloop/app/.cache/ test';
 
   mountAndRunCommand(projectPath, args, command, (exitCode: any) => {
     signale.success('Done');

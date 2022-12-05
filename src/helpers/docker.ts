@@ -7,7 +7,7 @@ export const dockerInit = () => {
 };
 
 export const pullImage = async (image: string) => {
-  let docker = dockerInit();
+  const docker = dockerInit();
   await docker
     .pull(image)
     .then(stream => {
@@ -31,7 +31,7 @@ export const runAContainerInBackground = async (
   cmd: [],
   hostConfig: {}
 ) => {
-  let docker = dockerInit();
+  const docker = dockerInit();
 
   const container = await docker.createContainer({
     Image: image,
@@ -49,7 +49,7 @@ export const mountAndRunCommand = (
   command: string,
   cb: any
 ) => {
-  let docker = dockerInit();
+  const docker = dockerInit();
 
   if (args) command = `${command} ${args.join(' ')}`;
 
@@ -62,9 +62,9 @@ export const mountAndRunCommand = (
       },
       Tty: false,
     },
-    function (err, container: any) {
+    (err, container: any) => {
       if (err) panic(err);
-      container.start(function (err: any, stream: any) {
+      container.start((err: any, stream: any) => {
         container.exec(
           {
             Cmd: ['sh', '-c', command],
@@ -72,19 +72,12 @@ export const mountAndRunCommand = (
             AttachStdout: true,
             WorkingDir: '/goloop/app',
           },
-          function (err: any, exec: any) {
-            exec.start(
-              {Tty: false, Detach: false},
-              function (err: any, stream: any) {
-                docker.modem.demuxStream(
-                  stream,
-                  process.stdout,
-                  process.stderr
-                );
-              }
-            );
+          (err: any, exec: any) => {
+            exec.start({Tty: false, Detach: false}, (err: any, stream: any) => {
+              docker.modem.demuxStream(stream, process.stdout, process.stderr);
+            });
 
-            let id = setInterval(() => {
+            const id = setInterval(() => {
               exec.inspect({}, (err: any, status: any) => {
                 if (status.Running == false) {
                   clearInterval(id);

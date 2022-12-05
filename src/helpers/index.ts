@@ -16,7 +16,7 @@ export const banner = function () {
 };
 
 export const safeexit = function () {
-  signale.complete(`Ok! Good bye!!`);
+  signale.complete('Ok! Good bye!!');
 };
 
 export const panic = function (msg: string) {
@@ -46,7 +46,7 @@ export const ensureCWDDrogonProject = (projectPath: string) => {
 };
 
 function removeItemOnce(arr: any, value: string) {
-  var index = arr.indexOf(value);
+  const index = arr.indexOf(value);
   if (index > -1) {
     arr.splice(index, 1);
   }
@@ -57,7 +57,7 @@ export const listAvailableContracts = (projectPath: string, cb: any) => {
   if (!checkIfFileExists(`${projectPath}/drogon-config.json`))
     panic('Please run the command inside the Drogon Project');
 
-  let projects: any = {};
+  const projects: any = {};
 
   fs.readdir(`${projectPath}/src`, (err, files) => {
     if (err) {
@@ -66,7 +66,7 @@ export const listAvailableContracts = (projectPath: string, cb: any) => {
 
     files = removeItemOnce(files, 'build');
 
-    files.forEach(function (file) {
+    files.forEach(file => {
       if (fs.lstatSync(`${projectPath}/src/${file}`).isDirectory()) {
         projects[file] = `${projectPath}/src/${file}`;
       }
@@ -97,9 +97,9 @@ export class ProgressBar {
   ];
 
   private msg = '';
-  private _pos: number = 0;
+  private _pos = 0;
   private intervalID: any;
-  private interval: number = 1000; // milliseconds
+  private interval = 1000; // milliseconds
 
   constructor(msg: string, interval: number) {
     this.msg = msg;

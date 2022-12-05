@@ -14,8 +14,8 @@ export const optimizeContracts = (projectPath: string, args: any) => {
   signale.pending('Deploying contracts');
 
   listAvailableContracts(projectPath, (projects: any) => {
-    for (var i in projects) {
-      let command = `/goloop/gradlew --build-cache -g /goloop/app/.cache/ src:${i}:optimizedJar`;
+    for (const i in projects) {
+      const command = `/goloop/gradlew --build-cache -g /goloop/app/.cache/ src:${i}:optimizedJar`;
 
       mountAndRunCommand(projectPath, args, command, (exitCode: any) => {
         signale.success('Done');

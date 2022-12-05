@@ -48,7 +48,7 @@ const main = async () => {
     .description('Compile the Drogon contracts')
     .option('-p, --path [string]', 'Path of your Drogon Project', './')
     .action(function (this: any) {
-      let path = resolve(this.opts().path);
+      const path = resolve(this.opts().path);
       compileContracts(path, this.args);
     });
 
@@ -58,7 +58,7 @@ const main = async () => {
     .description('Run the tests against the Drogon contracts')
     .option('-p, --path [string]', 'Path of your Drogon Project', './')
     .action(function (this: any) {
-      let path = resolve(this.opts().path);
+      const path = resolve(this.opts().path);
       testContracts(path, this.args);
     });
 
@@ -68,7 +68,7 @@ const main = async () => {
     .description('Run gradlew commands against the Drogon project')
     .option('-p, --path [string]', 'Path of your Drogon Project', './')
     .action(function (this: any) {
-      let path = resolve(this.opts().path);
+      const path = resolve(this.opts().path);
       gradleCommands(path, this.args);
     });
 
@@ -78,7 +78,7 @@ const main = async () => {
     .description('Optmize contracts from the Drogon project')
     .option('-p, --path [string]', 'Path of your Drogon Project', './')
     .action(function (this: any) {
-      let path = resolve(this.opts().path);
+      const path = resolve(this.opts().path);
       optimizeContracts(path, this.args);
     });
 
@@ -88,7 +88,7 @@ const main = async () => {
     .description('Deploy contracts from the Drogon project')
     .option('-p, --path [string]', 'Path of your Drogon Project', './')
     .action(function (this: any) {
-      let path = resolve(this.opts().path);
+      const path = resolve(this.opts().path);
       deployContracts(path, this.args);
     });
 
@@ -99,7 +99,7 @@ const main = async () => {
     .option('-p, --path [string]', 'Path of your Drogon Project', './')
     .option('-s, --password [string]', 'Password for the keystore', 'gochain')
     .action(function (this: any) {
-      let path = resolve(this.opts().path);
+      const path = resolve(this.opts().path);
       generateKeystore(path, this.args);
     });
 
@@ -109,11 +109,11 @@ const main = async () => {
     .description('Run goloop commands against the Drogon project')
     .option('-p, --path [string]', 'Path of your Drogon Project', './')
     .action(function (this: any) {
-      let path = resolve(this.opts().path);
+      const path = resolve(this.opts().path);
       generateKeystore(path, this.args);
     });
 
-  let sandbox = program
+  const sandbox = program
     .command('sandbox')
     .description('Run a local network in the Drogon project');
 
@@ -123,7 +123,7 @@ const main = async () => {
     .description('initialize the local network')
     .option('-p, --path [string]', 'Path of your Drogon Project', './')
     .action(function (this: any) {
-      let path = resolve(this.opts().path);
+      const path = resolve(this.opts().path);
       initSandbox(path, this.args);
     });
 
@@ -133,7 +133,7 @@ const main = async () => {
     .description('start the local network')
     .option('-p, --path [string]', 'Path of your Drogon Project', './')
     .action(function (this: any) {
-      let path = resolve(this.opts().path);
+      const path = resolve(this.opts().path);
       startSandbox(path, this.args);
     });
 
@@ -143,7 +143,7 @@ const main = async () => {
     .description('stop the local network')
     .option('-p, --path [string]', 'Path of your Drogon Project', './')
     .action(function (this: any) {
-      let path = resolve(this.opts().path);
+      const path = resolve(this.opts().path);
       stopSandbox(path, this.args);
     });
 

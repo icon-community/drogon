@@ -14,7 +14,7 @@ export const compileContracts = (projectPath: string, args: any) => {
 };
 
 export const mountAndCompile = (projectPath: string, args: any, cb: any) => {
-  let docker = dockerInit();
-  let command = `/goloop/gradlew --build-cache -g /goloop/app/.cache/ build`;
+  const docker = dockerInit();
+  const command = '/goloop/gradlew --build-cache -g /goloop/app/.cache/ build';
   mountAndRunCommand(projectPath, args, command, cb);
 };
