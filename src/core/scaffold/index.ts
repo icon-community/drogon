@@ -1,5 +1,4 @@
 import axios from 'axios';
-import chalk from 'chalk';
 import {basename} from 'path';
 import {DROGON_IMAGE} from '../../constants';
 
@@ -11,8 +10,8 @@ export const scaffoldProject = async (
   repo: string,
   destination: string
 ) => {
-  let branch = 'master';
-  let progressBar = new ProgressBar('Scaffolding...', 100);
+  const branch = 'master';
+  const progressBar = new ProgressBar('Scaffolding...', 100);
   progressBar.start();
 
   await verifySourcePath(repo);
@@ -22,7 +21,7 @@ export const scaffoldProject = async (
 
 // Checks if the repository exists
 export const verifySourcePath = async (repo: string) => {
-  let repoUrl = `https://github.com/${repo}`;
+  const repoUrl = `https://github.com/${repo}`;
 
   try {
     await axios.head(repoUrl, {maxRedirects: 50});
@@ -43,14 +42,15 @@ const fetchProject = async (
   projectName: string,
   source: string,
   destination: string,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   branch: string
 ) => {
-  let url = `https://github.com/${source}`;
+  const url = `https://github.com/${source}`;
 
-  let repoName = basename(source);
+  const repoName = basename(source);
 
-  let docker = await dockerInit();
-  let container = await docker.run(
+  const docker = await dockerInit();
+  const container = await docker.run(
     DROGON_IMAGE,
     [
       'sh',
@@ -65,10 +65,11 @@ const fetchProject = async (
       AttachStderr: true,
       WorkingDir: '/home',
     },
-    function (err: any, data: any, container: any) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    (err: any, data: any, container: any) => {
       if (err) panic(`Failed to fetch boilerplate. ${err}`);
     }
   );
-
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   container.on('stream', (stream: any) => {});
 };

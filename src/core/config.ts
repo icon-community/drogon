@@ -1,10 +1,8 @@
-import prompts from 'prompts';
-
 enum Deployment {
   DeployJar = 0,
   DeployGoloop = 1,
 }
-
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 interface Compiler {
   gradle_version: string;
 }
@@ -17,7 +15,7 @@ interface Network {
 export class Config {
   private keystore: any;
   private password: any;
-  private name: string = '';
+  private name = '';
   private networks: Network[] = [];
 
   // Do you want to use deployJar inside every projects or

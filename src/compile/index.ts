@@ -1,6 +1,5 @@
 import signale from 'signale';
-import {DROGON_IMAGE} from '../constants';
-import {ensureCWDDrogonProject, panic, ProgressBar} from '../helpers';
+import {ensureCWDDrogonProject} from '../helpers';
 import {dockerInit, mountAndRunCommand} from '../helpers/docker';
 
 export const compileContracts = (projectPath: string, args: any) => {
@@ -14,7 +13,7 @@ export const compileContracts = (projectPath: string, args: any) => {
 };
 
 export const mountAndCompile = (projectPath: string, args: any, cb: any) => {
-  let docker = dockerInit();
-  let command = `/goloop/gradlew --build-cache -g /goloop/app/.cache/ build`;
+  dockerInit();
+  const command = '/goloop/gradlew --build-cache -g /goloop/app/.cache/ build';
   mountAndRunCommand(projectPath, args, command, cb);
 };

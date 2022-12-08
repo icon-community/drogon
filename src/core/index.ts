@@ -1,7 +1,6 @@
 import {basename, resolve} from 'path';
 import prompts from 'prompts';
 import * as fs from 'fs';
-import * as scaffold from './scaffold';
 import {
   checkIfFileExists,
   ensureCWDDrogonProject,
@@ -9,7 +8,7 @@ import {
   ProgressBar,
   safeexit,
 } from '../helpers';
-import {dockerInit, mountAndRunCommand, pullImage} from '../helpers/docker';
+import {mountAndRunCommand, pullImage} from '../helpers/docker';
 
 import {DROGON_IMAGE, GOCHAIN_IMAGE, ICON_TEMPLATES_REPO} from '../constants';
 import {mainBuildGradle, gradleSettings, gitignore} from './contents';
@@ -19,7 +18,7 @@ import signale from 'signale';
 
 export const install = async () => {
   signale.pending('Installing Drogon');
-  let progressBar = new ProgressBar('Scaffolding...', 100);
+  const progressBar = new ProgressBar('Scaffolding...', 100);
   progressBar.start();
 
   await fetch_drogon();
@@ -42,7 +41,7 @@ export const createNewProject = async () => {
     {
       type: 'text',
       name: 'path',
-      message: `Name of the project`,
+      message: 'Name of the project',
     },
     {
       type: 'toggle',
@@ -50,7 +49,7 @@ export const createNewProject = async () => {
       initial: true,
       active: 'yes',
       inactive: 'no',
-      message: `Do you want to initialize your Drogon project with samples?`,
+      message: 'Do you want to initialize your Drogon project with samples?',
     },
     {
       type: 'toggle',
@@ -62,21 +61,22 @@ export const createNewProject = async () => {
     },
   ]);
 
-  let projectPath = resolve(response.path);
+  const projectPath = resolve(response.path);
 
   if (checkIfFileExists(`${projectPath}/drogon-config.json`)) {
-    let response = await prompts([
+    const response = await prompts([
       {
         type: 'toggle',
         name: 'overwrite',
         initial: false,
         active: 'yes',
         inactive: 'no',
-        message: `Current working directory looks like a Drogon project. Do you want to overwrite all files?`,
+        message:
+          'Current working directory looks like a Drogon project. Do you want to overwrite all files?',
       },
     ]);
 
-    if (response.overwrite == false) {
+    if (response.overwrite === false) {
       safeexit();
     }
   }
@@ -112,11 +112,11 @@ export const pickABoilerplate = async () => {
 };
 
 const initialiseProject = async (path: string) => {
-  let name = basename(path);
+  const name = basename(path);
 
   fs.mkdirSync(`${path}/src/`, {recursive: true});
 
-  let config = Config.generateNew(name);
+  const config = Config.generateNew(name);
 
   fs.writeFile(
     `${path}/drogon-config.json`,
@@ -144,23 +144,25 @@ const initialiseProject = async (path: string) => {
   return name;
 };
 
+/*eslint-disable */
 export const addProjectToIncludes = async (
   path: string,
   boilerplate: string
 ) => {};
+/*eslint-disable */
 
 const initProjectIncludes = async (path: string, boilerplate: string) => {
-  let includes = `include(
+  const includes = `include(
         'src:${boilerplate}'
     )`;
 
-  fs.readFile(`${path}/settings.gradle`, 'utf8', function (err, data) {
+  fs.readFile(`${path}/settings.gradle`, 'utf8', (err, data) => {
     if (err) {
       return console.log(err);
     }
-    var result = data.replace(/include \(\)/g, includes);
+    const result = data.replace(/include \(\)/g, includes);
 
-    fs.writeFile(`${path}/settings.gradle`, result, 'utf8', function (err) {
+    fs.writeFile(`${path}/settings.gradle`, result, 'utf8', err => {
       if (err) return console.log(err);
     });
   });
@@ -177,6 +179,6 @@ export const gradleCommands = async (projectPath: string, args: any) => {
 };
 
 const mountAndRunGradle = async (projectPath: string, args: any, cb: any) => {
-  let command = `/goloop/gradlew --build-cache -g /goloop/app/.cache/`;
+  const command = '/goloop/gradlew --build-cache -g /goloop/app/.cache/';
   mountAndRunCommand(projectPath, args, command, cb);
 };
