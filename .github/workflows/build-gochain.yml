@@ -38,6 +38,6 @@ jobs:
 
       - name: Push gochain-image to docker hub
         run: |
-          docker tag goloop/gochain:latest iconcommunity/gochain:${{ steps.repository.outputs.tag }}
-          docker push iconcommunity/gochain:${{ steps.repository.outputs.tag }}
+          docker tag goloop/gochain:latest iconcommunity/gochain:latest
+          docker push iconcommunity/gochain:latest
         working-directory: goloop

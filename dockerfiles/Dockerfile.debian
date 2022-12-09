@@ -23,9 +23,9 @@ ENV PATH="/usr/local/go/bin:/usr/local/go/goloop/bin/:${PATH}"
 WORKDIR /usr/local/go/
 
 # Install goloop
-RUN git clone https://github.com/icon-project/goloop.git \
-    && cd goloop \
-    && GOBUILD_TAGS= make goloop
+RUN git clone https://github.com/icon-project/goloop.git 
+RUN cd goloop 
+RUN GOBUILD_TAGS= make goloop
 
 WORKDIR /goloop
 
