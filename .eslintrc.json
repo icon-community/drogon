@@ -1,0 +1,12 @@
+{
+  "extends": "./node_modules/gts/",
+  "overrides": [
+    {
+      "files": ["*.ts"],
+      "rules": {
+        "@typescript-eslint/no-explicit-any": 0,
+        "no-process-exit" : 0
+      }
+    }
+  ]
+}

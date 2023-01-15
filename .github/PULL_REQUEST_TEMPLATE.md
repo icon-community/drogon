@@ -2,21 +2,21 @@
 
 ## Description
 
-*Please include a summary of the change and which issue is fixed. Please also include relevant motivation and context. List any dependencies that are required for this change.*
+_Please include a summary of the change and which issue is fixed. Please also include relevant motivation and context. List any dependencies that are required for this change._
 
 Fixes # (issue)
 
 Features
 
-
 ## New/Edited policies (Delete if not relevant)
 
 ### Description
-*Include a description of what makes it a violation and any relevant external links.*
+
+_Include a description of what makes it a violation and any relevant external links._
 
 ### Fix
-*How does someone fix the issue in code and/or in runtime?*
 
+_How does someone fix the issue in code and/or in runtime?_
 
 ## Checklist:
 

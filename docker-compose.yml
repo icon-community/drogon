@@ -1,0 +1,36 @@
+version: '3'
+services:
+  drogon:
+    image: drogon
+
+    build:
+      context: .
+      dockerfile: dockerfiles/Dockerfile.debian
+
+    container_name: drogon
+    networks:
+      - drogon
+
+  # sandbox:
+  #   image: ghcr.io/shotfuse/gochain:latest
+  #   volumes:
+  #       - ./.drogon/data/multi:/goloop/data
+  #       - ./.drogon/data/governance:/goloop/data/gov
+  #       - ./.drogon/chain:/goloop/chain
+
+  #   env_file:
+  #       - ./.drogon/data/multi/common.env
+
+  #   environment:
+  #       GOCHAIN_CONFIG: "/goloop/data/config0.json"
+  #       GOCHAIN_DATA: "/goloop/chain/node0"
+  #       GOCHAIN_LOGFILE: "/goloop/chain/node0.log"
+
+  #   ports:
+  #       - "9080:9080"
+
+  #   networks:
+  #     - drogon
+
+networks:
+  drogon:
