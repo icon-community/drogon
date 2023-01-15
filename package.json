@@ -1,6 +1,6 @@
 {
   "name": "drogon",
-  "version": "0.1.1",
+  "version": "0.1.0",
   "description": "Drogon is a robust, lightweight application development framework used for developing, testing, and deploying smart contracts on the ICON blockchain. The core features of the Drogon makes ICON smart contract developers’ life easy by providing support for multiple contract compilations, tests, and deploying on a public and private network.",
   "main": "./.build/src/index.js",
   "devDependencies": {
@@ -32,26 +32,18 @@
     "package": "pkg . --targets node16 --no-bytecode --public-packages '*' --public --output drogon",
     "prepublishOnly": "npm run clean && npm run compile",
     "preversion": "npm run lint",
-    "version": "npm run lint:fix && git add -A src",
-    "postversion": "echo '######START#####'"
+    "version" : "npm run lint:fix && git add -A src",
+    "postversion" : "echo '######START#####'"
   },
   "bin": {
-    "drogon": "./.build/src/index.js"
+    "drogon" : "./.build/src/index.js"
   },
-  "files": [
-    "./.build"
-  ],
-  "pkg": {
+  "files": ["./.build"],
+  "pkg" : {
     "scripts": ".build/**/*.js",
-    "assets": [
-      "**/fonts/*.flf"
-    ]
+    "assets": [ "**/fonts/*.flf"]
   },
-  "keywords": [
-    "blockchain",
-    "drogon",
-    "icon-project"
-  ],
+  "keywords": ["blockchain", "drogon", "icon-project"],
   "homepage": "https://drogon.io",
   "bugs": {
     "url": "https://github.com/icon-community/drogon/issues"
