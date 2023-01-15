@@ -64,6 +64,7 @@
     "download-git-repo": "^3.0.2",
     "figlet": "^1.5.2",
     "inquirer": "^9.1.0",
+    "pkginfo": "^0.4.1",
     "prompts": "^2.4.2",
     "signale": "^1.4.0"
   }
