@@ -1,12 +1,8 @@
 name: Build and publish the Drogon image
-
-'on':
-  push:
-    tags:
-      - '*'
-    branches:
-      - 'dev-0.1.0'
-
+on:
+  workflow_run:
+    workflows: ["Release NPM Package"]
+    types: [completed]
 jobs:
   build-drogon-image:
     runs-on: ubuntu-latest
