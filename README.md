@@ -4,18 +4,16 @@
 
 Drogon is a robust, lightweight application development framework used for developing, testing, and deploying smart contracts on the ICON blockchain. The core features of the Drogon makes ICON smart contract developers’ life easy by providing support for multiple contract compilations, tests, and deploying on a public and private network.
 
-## Installation
 
 ### Requirements
 
 - Docker
-- yarn
+- nodejs (to install from the npm registry)
+
+## Installation
 
 ```sh
-git clone https://github.com/icon-community/drogon -b dev-0.1.0
-cd drogon/
-yarn install
-yarn drogon install
+npm install -g @icon-community/drogon
 ```
 
 ## Usage
@@ -23,15 +21,15 @@ yarn drogon install
 ### drogon init
 
 ```sh
-yarn drogon  init
+drogon init
 ```
 
 ### drogon compile
 
 ```sh
-yarn drogon compile --help
-yarn drogon compile -p /path/to/drogon/project
-yarn drogon compile -p /path/to/drogon/project <gradle flags here>
+drogon compile --help
+drogon compile -p /path/to/drogon/project
+drogon compile -p /path/to/drogon/project <gradle flags here>
 ```
 
 ### Features
