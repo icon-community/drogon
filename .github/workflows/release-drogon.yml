@@ -5,7 +5,7 @@ on:
       - 'main'
 
 jobs:
-  build-drogon-image:
+  release-npm:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -44,9 +44,12 @@ jobs:
           git commit -m "chore: release ${{ env.NEW_VERSION }}"
           git tag ${{ env.NEW_VERSION }}
           
+      - name: Install dependencies
+        run: npm install
+
       # Publish version to public repository
       - name: Publish
-        run: yarn publish --verbose --access public --tag ${{ env.RELEASE_TAG }}
+        run: npm publish --verbose --access public --tag ${{ env.RELEASE_TAG }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
