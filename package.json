@@ -1,6 +1,6 @@
 {
   "name": "@icon-community/drogon",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Drogon is a robust, lightweight application development framework used for developing, testing, and deploying smart contracts on the ICON blockchain. The core features of the Drogon makes ICON smart contract developers’ life easy by providing support for multiple contract compilations, tests, and deploying on a public and private network.",
   "main": "./.build/src/index.js",
   "devDependencies": {
@@ -12,6 +12,7 @@
     "gts": "^3.1.1",
     "pkg": "^5.8.0",
     "prettier": "^2.8.0",
+    "release-it": "^15.6.0",
     "ts-node": "^10.9.1",
     "typescript": "^4.9.3"
   },
@@ -30,13 +31,14 @@
     "build:images": "cd goloop && GL_TAG=`node --eval=\"process.stdout.write(require('../package.json').version)\"` make gochain-icon-image",
     "prettify": "npx prettier --write .",
     "package": "pkg . --targets node16 --no-bytecode --public-packages '*' --public --output drogon",
-    "prepublishOnly": "npm run clean && npm run compile"
+    "prepublishOnly": "npm run clean && npm run compile",
+    "release": "npx release-it"
   },
   "bin": {
     "drogon": "./.build/src/index.js"
   },
   "files": [
-    "./.build"
+    ".build/**/*"
   ],
   "pkg": {
     "scripts": ".build/**/*.js",
@@ -64,5 +66,8 @@
     "pkginfo": "^0.4.1",
     "prompts": "^2.4.2",
     "signale": "^1.4.0"
+  },
+  "npm": {
+    "versionArgs": ["--allow-same-version"]
   }
 }
