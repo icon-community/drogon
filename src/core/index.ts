@@ -13,7 +13,7 @@ import {mountAndRunCommand, pullImage} from '../helpers/docker';
 import {DROGON_IMAGE, GOCHAIN_IMAGE, ICON_TEMPLATES_REPO} from '../constants';
 import {mainBuildGradle, gradleSettings, gitignore} from './contents';
 import {Config} from './config';
-import {scaffoldProject} from './scaffold';
+import {runTackle, scaffoldProject} from './scaffold';
 import signale from 'signale';
 
 export const install = async () => {
@@ -52,6 +52,22 @@ export const createNewProject = async () => {
       message: 'Do you want to initialize your Drogon project with samples?',
     },
     {
+      type: prev => (prev ? 'multiselect' : null),
+      name: 'sampleGeneratorType',
+      message: 'Which code generator tool do you want to use?',
+      choices: [
+        {
+          title: 'Tackle (https://github.com/sudoblockio/tackle-icon-sc-poc)',
+          value: 'tackle',
+        },
+        {
+          title:
+            'Java SCORE examples(https://github.com/icon-project/java-score-examples)',
+          value: 'javascore',
+        },
+      ],
+    },
+    {
       type: 'toggle',
       name: 'generateAccount',
       initial: true,
@@ -84,9 +100,14 @@ export const createNewProject = async () => {
   await initialiseProject(projectPath);
 
   if (response.createSamples) {
-    const boilerplate = await pickABoilerplate();
-    await scaffoldProject(boilerplate, ICON_TEMPLATES_REPO, projectPath);
-    await initProjectIncludes(projectPath, boilerplate);
+    if (response.sampleGeneratorType == 'javascore') {
+      const boilerplate = await pickABoilerplate();
+      await scaffoldProject(boilerplate, ICON_TEMPLATES_REPO, projectPath);
+      await initProjectIncludes(projectPath, boilerplate);
+    } else if (response.sampleGeneratorType == 'tackle') {
+      const projectName = response.path;
+      await runTackle(projectName, projectPath);
+    }
   }
 };
 
