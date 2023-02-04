@@ -13,7 +13,7 @@ import {mountAndRunCommand, pullImage} from '../helpers/docker';
 import {DROGON_IMAGE, GOCHAIN_IMAGE, ICON_TEMPLATES_REPO} from '../constants';
 import {mainBuildGradle, gradleSettings, gitignore} from './contents';
 import {Config} from './config';
-import {scaffoldProject} from './scaffold';
+import {runTackle, scaffoldProject} from './scaffold';
 import signale from 'signale';
 
 export const install = async () => {
@@ -84,10 +84,9 @@ export const createNewProject = async () => {
   await initialiseProject(projectPath);
 
   if (response.createSamples) {
-    const boilerplate = await pickABoilerplate();
-    await scaffoldProject(boilerplate, ICON_TEMPLATES_REPO, projectPath);
-    await initProjectIncludes(projectPath, boilerplate);
-  }
+      const projectName = response.path;
+      await runTackle(projectName, projectPath);
+    }
 };
 
 export const pickABoilerplate = async () => {
@@ -114,7 +113,7 @@ export const pickABoilerplate = async () => {
 const initialiseProject = async (path: string) => {
   const name = basename(path);
 
-  fs.mkdirSync(`${path}/src/`, {recursive: true});
+  fs.mkdirSync(`${path}/`, {recursive: true});
 
   const config = Config.generateNew(name);
 
@@ -130,17 +129,6 @@ const initialiseProject = async (path: string) => {
     if (err) panic(`Failed to create .gitignore. ${err}`);
   });
 
-  fs.writeFile(`${path}/build.gradle`, mainBuildGradle, err => {
-    if (err) panic(`Failed to create build.gradle. ${err}`);
-  });
-
-  fs.writeFile(
-    `${path}/settings.gradle`,
-    gradleSettings.replace('java-score-examples', name),
-    err => {
-      if (err) panic(`Failed to create build.gradle. ${err}`);
-    }
-  );
   return name;
 };
 
@@ -181,4 +169,4 @@ export const gradleCommands = async (projectPath: string, args: any) => {
 const mountAndRunGradle = async (projectPath: string, args: any, cb: any) => {
   const command = '/goloop/gradlew --build-cache -g /goloop/app/.cache/';
   mountAndRunCommand(projectPath, args, command, cb);
-};
+}

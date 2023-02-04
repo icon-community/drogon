@@ -3,7 +3,7 @@ import {basename} from 'path';
 import {DROGON_IMAGE} from '../../constants';
 
 import {panic, ProgressBar} from '../../helpers';
-import {dockerInit} from '../../helpers/docker';
+import {dockerInit, interactWithDockerContainer} from '../../helpers/docker';
 
 export const scaffoldProject = async (
   projectName: string,
@@ -72,4 +72,19 @@ const fetchProject = async (
   );
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   container.on('stream', (stream: any) => {});
+};
+
+export const runTackle = async (projectName: string, destination: string) => {
+  const docker = await dockerInit();
+  await docker.createContainer({
+    name: 'drogon-container',
+    HostConfig: {
+      AutoRemove: true,
+      Binds: [`${destination}:/home/${projectName}`],
+    },
+    Image: DROGON_IMAGE,
+    Tty: true,
+  });
+
+  await interactWithDockerContainer('drogon-container', `/home/${projectName}`);
 };

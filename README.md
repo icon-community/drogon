@@ -4,7 +4,6 @@
 
 Drogon is a robust, lightweight application development framework used for developing, testing, and deploying smart contracts on the ICON blockchain. The core features of the Drogon makes ICON smart contract developers’ life easy by providing support for multiple contract compilations, tests, and deploying on a public and private network.
 
-
 ### Requirements
 
 - Docker
