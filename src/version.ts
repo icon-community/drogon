@@ -1,2 +1,1 @@
-var version = require('pkginfo')(module, 'version')
-export const LIB_VERSION = version;
+export const LIB_VERSION = "1.1.1";

@@ -32,3 +32,10 @@ jobs:
           file: ./dockerfiles/Dockerfile.debian
           tags: iconcommunity/drogon:${{ steps.repository.outputs.tag }}
           
+      - name: Build & push container to docker hub
+        uses: docker/build-push-action@v3
+        with:
+          push: true
+          context: .
+          file: ./dockerfiles/Dockerfile.debian
+          tags: iconcommunity/drogon:latest
