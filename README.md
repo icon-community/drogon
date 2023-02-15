@@ -17,6 +17,14 @@ npm install -g @icon-community/drogon
 
 ## Usage
 
+### drogon install
+
+> Please make sure to start Docker before running any of the following commands. only has to be done once per installation
+
+The sub-command `install` pulls in the docker images of gochain and Drogon from icon-community's packages and makes Drogon action ready.
+
+NOTE: `install` must be done before running any other sub-commands.
+
 ### drogon init
 
 ```sh
