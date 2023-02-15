@@ -26,6 +26,7 @@ export const install = async () => {
 
   progressBar.stopWithMessage('Drogon ready for use.');
   signale.success('Drogon ready for use.');
+  process.exit()
 };
 
 export const fetch_drogon = async () => {
