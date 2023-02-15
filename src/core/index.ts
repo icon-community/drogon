@@ -1,4 +1,4 @@
-import {basename, resolve} from 'path';
+import { basename, resolve } from 'path';
 import prompts from 'prompts';
 import * as fs from 'fs';
 import {
@@ -8,12 +8,12 @@ import {
   ProgressBar,
   safeexit,
 } from '../helpers';
-import {mountAndRunCommand, pullImage} from '../helpers/docker';
+import { mountAndRunCommand, pullImage } from '../helpers/docker';
 
-import {DROGON_IMAGE, GOCHAIN_IMAGE, ICON_TEMPLATES_REPO} from '../constants';
-import {mainBuildGradle, gradleSettings, gitignore} from './contents';
-import {Config} from './config';
-import {runTackle, scaffoldProject} from './scaffold';
+import { DROGON_IMAGE, GOCHAIN_IMAGE, ICON_TEMPLATES_REPO } from '../constants';
+import { mainBuildGradle, gradleSettings, gitignore } from './contents';
+import { Config } from './config';
+import { runTackle, scaffoldProject } from './scaffold';
 import signale from 'signale';
 
 export const install = async () => {
@@ -84,9 +84,9 @@ export const createNewProject = async () => {
   await initialiseProject(projectPath);
 
   if (response.createSamples) {
-      const projectName = response.path;
-      await runTackle(projectName, projectPath);
-    }
+    const projectName = response.path;
+    await runTackle(projectName, projectPath);
+  }
 };
 
 export const pickABoilerplate = async () => {
@@ -96,13 +96,13 @@ export const pickABoilerplate = async () => {
       name: 'boilerplate',
       message: 'Pick a boilerplate',
       choices: [
-        {title: 'Hello World', value: 'hello-world'},
-        {title: 'IRC2 Token', value: 'irc2-token'},
-        {title: 'IRC3 Token', value: 'irc3-token'},
-        {title: 'IRC31 Token', value: 'irc31-token'},
-        {title: 'Multisig Wallet', value: 'multisig-wallet'},
-        {title: 'Sample Crowdsale', value: 'sample-crowdsale'},
-        {title: 'Sample Token', value: 'sample-token'},
+        { title: 'Hello World', value: 'hello-world' },
+        { title: 'IRC2 Token', value: 'irc2-token' },
+        { title: 'IRC3 Token', value: 'irc3-token' },
+        { title: 'IRC31 Token', value: 'irc31-token' },
+        { title: 'Multisig Wallet', value: 'multisig-wallet' },
+        { title: 'Sample Crowdsale', value: 'sample-crowdsale' },
+        { title: 'Sample Token', value: 'sample-token' },
       ],
     },
   ]);
@@ -113,7 +113,7 @@ export const pickABoilerplate = async () => {
 const initialiseProject = async (path: string) => {
   const name = basename(path);
 
-  fs.mkdirSync(`${path}/`, {recursive: true});
+  fs.mkdirSync(`${path}/`, { recursive: true });
 
   const config = Config.generateNew(name);
 
@@ -136,7 +136,7 @@ const initialiseProject = async (path: string) => {
 export const addProjectToIncludes = async (
   path: string,
   boilerplate: string
-) => {};
+) => { };
 /*eslint-disable */
 
 const initProjectIncludes = async (path: string, boilerplate: string) => {
