@@ -12,6 +12,8 @@ import {deployContracts} from './deploy';
 import {optimizeContracts} from './deploy/optimize';
 import {generateKeystore} from './goloop';
 import {initSandbox, startSandbox, stopSandbox} from './sandbox';
+import { localDrogonImageId } from './helpers/docker';
+import { DROGON_IMAGE } from './constants';
 
 const main = async () => {
   banner();
@@ -34,6 +36,11 @@ const main = async () => {
     .command('init')
     .description('Initialize a new Drogon project')
     .action(async () => {
+      const localImage = await localDrogonImageId(DROGON_IMAGE)
+      if(!localImage) {
+        console.error('Error: drogon pre-requisites not met. Are you sure you performed the drogon install before this?')
+        process.exit()
+      }
       await createNewProject();
     });
 
