@@ -7,7 +7,7 @@ export const generateKeystore = async (projectPath: string, args: any) => {
   ensureCWDDrogonProject(projectPath);
 
   signale.pending('Generating Keystore...');
-  const command = `goloop ks gen -o keystore.json -p ${args.password}`;
+  const command = `goloop ks gen -o /goloop/app/.keystore.json -p ${args.password}`;
   mountAndRunCommand(projectPath, args, command, (exitCode: any) => {
     signale.success('Done');
     if (exitCode !== 0) process.exit(exitCode);
