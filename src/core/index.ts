@@ -8,7 +8,7 @@ import {
   ProgressBar,
   safeexit,
 } from '../helpers';
-import { mountAndRunCommand, pullImage } from '../helpers/docker';
+import { localDrogonImageId, removeImage, mountAndRunCommand, pullImage } from '../helpers/docker';
 
 import { DROGON_IMAGE, GOCHAIN_IMAGE, ICON_TEMPLATES_REPO } from '../constants';
 import { mainBuildGradle, gradleSettings, gitignore } from './contents';
@@ -17,7 +17,7 @@ import { runTackle, scaffoldProject } from './scaffold';
 import signale from 'signale';
 
 export const install = async () => {
-  signale.pending('Installing Drogon');
+  signale.pending('Installing Drogon...Hold tight, it might take a while!');
   const progressBar = new ProgressBar('Scaffolding...', 100);
   progressBar.start();
 
@@ -30,11 +30,22 @@ export const install = async () => {
 };
 
 export const fetch_drogon = async () => {
+  
+  const localImage = await localDrogonImageId(DROGON_IMAGE)
+  if(localImage) {
+    // since we must force pull even if it exists, we should remove it from disk
+    await removeImage(localImage)
+  }
   await pullImage(DROGON_IMAGE);
 };
 
 export const fetch_score_image = async () => {
+  const localImage = await localDrogonImageId(GOCHAIN_IMAGE)
+  if(localImage) {
+    await removeImage(localImage)
+  }
   await pullImage(GOCHAIN_IMAGE);
+  
 };
 
 export const createNewProject = async () => {

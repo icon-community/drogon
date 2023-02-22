@@ -1,4 +1,4 @@
-import Docker from 'dockerode';
+import Docker, { Image } from 'dockerode';
 import {DROGON_IMAGE} from '../constants';
 import {panic} from '../helpers';
 
@@ -8,25 +8,50 @@ export const dockerInit = () => {
 
 export const pullImage = async (image: string) => {
   const docker = dockerInit();
-  await docker
-    .pull(image)
-    .then(stream => {
-      docker.modem.followProgress(stream, onFinished, onProgress);
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      function onFinished(err: any, output: any) {}
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      function onProgress(event: any) {
-        // let status = event.status
-        // let progress = event.progress
-        // if(progress)
-        //     process.stdout.write(`[docker]: ${progress}` + '\r')
-      }
-    })
-    .catch(err => {
-      panic(`Failed to pull the ${image}. ${err}`);
-    });
-};
 
+  return new Promise<void>((resolve, reject) => {
+    docker.pull(image, (err:any, stream:any) => {
+      if (err) {
+        reject(err);
+      } else {
+        docker.modem.followProgress(stream, onFinished, onProgress);
+
+        function onProgress(event: any) {
+          // console.log(`Pulling ${image}: ${event.status}`);
+        }
+
+        function onFinished(err: any, output: any) {
+          if (err) {
+            reject(err);
+          } else {
+            console.log(`Successfully pulled ${image}`);
+            resolve();
+          }
+        }
+      }
+    });
+  });
+};
+export const localDrogonImageId = async (image: string) :Promise<string | null>  => {
+  const docker = dockerInit();
+  const list = await docker.listImages()
+  const filtered = list.filter(o => {
+    if(o.RepoTags) {
+      return o.RepoTags.indexOf(image) > -1
+    }
+    return false
+  })
+  if (filtered.length > 0) {
+    return filtered[0].Id
+  }
+  return null
+}
+export const removeImage =async (imageId:string) : Promise<boolean>=> {
+  const docker = dockerInit();
+  const image = await docker.getImage(imageId)
+  await image.remove()
+  return true
+}
 export const runAContainerInBackground = async (
   image: string,
   cmd: [],
