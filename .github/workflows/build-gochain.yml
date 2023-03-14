@@ -1,11 +1,13 @@
 name: Build and publish the gochain image
 
-'on':
+on:
   push:
     tags:
       - '*'
     branches:
-      - 'dev-0.1.0'
+      - 'main'
+env:
+ GOLOOP_VERSION: v1.3.3
 
 jobs:
   build-goloop-image:
@@ -15,15 +17,12 @@ jobs:
       packages: write
 
     steps:
-      - name: goloop version
-        id: repository
-        run: echo  "::set-output name=tag::$(curl -s https://api.github.com/repos/icon-project/goloop/releases/latest|grep '"name"'|cut -d '"' -f4)"
 
       - name: Clone goloop repository
         run: git clone https://github.com/icon-project/goloop.git
       
-      - name: Checkout the latest release version
-        run: git checkout ${{ steps.repository.outputs.tag }}
+      - name: Checkout the release version
+        run: git checkout ${{ env.GOLOOP_VERSION }}
         working-directory: goloop
 
       - name: Log in to docker hub registry
