@@ -10,7 +10,7 @@ import {compileContracts} from './compile';
 import {testContracts} from './test';
 import {deployContracts} from './deploy';
 import {optimizeContracts} from './deploy/optimize';
-import {generateKeystore} from './goloop';
+import {generateKeystore, goloop} from './goloop';
 import {initSandbox, startSandbox, stopSandbox} from './sandbox';
 import { localDrogonImageId } from './helpers/docker';
 import { DROGON_IMAGE } from './constants';
@@ -112,7 +112,7 @@ const main = async () => {
     .option('-p, --path [string]', 'Path of your Drogon Project', './')
     .action(function (this: any) {
       const path = resolve(this.opts().path);
-      generateKeystore(path, this.args);
+      goloop(path, this.args);
     });
 
   const sandbox = program
