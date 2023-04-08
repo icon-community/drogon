@@ -15,17 +15,18 @@ import { mainBuildGradle, gradleSettings, gitignore } from './contents';
 import { Config } from './config';
 import { runTackle, scaffoldProject } from './scaffold';
 import signale from 'signale';
+import { generateKeystore } from '../goloop';
 
 export const install = async () => {
-  signale.pending('Installing Drogon...Hold tight, it might take a while!');
-  const progressBar = new ProgressBar('Scaffolding...', 100);
+  // signale.pending('Installing Drogon...Hold tight, it might take a while!');
+  const progressBar = new ProgressBar('Installing Drogon...Hold tight, it might take a while!...', 100);
   progressBar.start();
 
   await fetch_drogon();
   await fetch_score_image();
 
   progressBar.stopWithMessage('Drogon ready for use.');
-  signale.success('Drogon ready for use.');
+  // signale.success('Drogon ready for use.');
   process.exit()
 };
 
@@ -47,6 +48,29 @@ export const fetch_score_image = async () => {
 
   await pullImage(GOCHAIN_IMAGE);
 };
+
+export const createAccount = async (projectPath: string) => {
+  const response = await prompts({
+    type: 'toggle',
+    name: 'generateAccount',
+    message: 'Do you want to generate a keystore for this project?',
+  })
+
+  if (response.generateAccount) {
+    // read password from user
+    const resp = await prompts({
+      type: 'password',
+      name: 'password',
+      message: 'Enter your password for your keystore file:'
+    });
+
+    let password = resp.password
+    
+    if(password===undefined)
+      password = ''
+    await generateKeystore(projectPath, password, [ ])
+  }
+}
 
 export const createNewProject = async () => {
   const response = await prompts([
@@ -72,14 +96,7 @@ export const createNewProject = async () => {
         { title: 'Java SCORE examples(https://github.com/icon-project/java-score-examples)', value: 'javascore' }
       ]
     },
-    {
-      type: 'toggle',
-      name: 'generateAccount',
-      initial: true,
-      active: 'yes',
-      inactive: 'no',
-      message: 'Do you want to generate a keystore for this project?',
-    },
+    
   ]);
 
   const projectPath = resolve(response.path);
@@ -103,18 +120,23 @@ export const createNewProject = async () => {
   }
 
   await initialiseProject(projectPath);
+  await createAccount(projectPath)
 
   if (response.createSamples) {
     if (response.sampleGeneratorType == 'javascore') {
       const boilerplate = await pickABoilerplate();
       await scaffoldProject(boilerplate, ICON_TEMPLATES_REPO, projectPath);
       await initProjectIncludes(projectPath, boilerplate);
+
     } else if (response.sampleGeneratorType == 'tackle') {
       const projectName = response.path;
       await runTackle(projectName, `${projectPath}/src`);
       await initProjectIncludes(projectPath, projectName);
+
     }
   }
+
+  return projectPath
 };
 
 export const pickABoilerplate = async () => {
@@ -188,6 +210,7 @@ const initProjectIncludes = async (path: string, boilerplate: string) => {
     if (err) {
       return console.log(err);
     }
+    
     const result = data.replace(/include \(\)/g, includes);
 
     fs.writeFile(`${path}/settings.gradle`, result, 'utf8', err => {
@@ -208,5 +231,5 @@ export const gradleCommands = async (projectPath: string, args: any) => {
 
 const mountAndRunGradle = async (projectPath: string, args: any, cb: any) => {
   const command = '/goloop/gradlew --build-cache -g /goloop/app/.cache/';
-  mountAndRunCommand(projectPath, args, command, cb);
+  await mountAndRunCommand(projectPath, args, command, cb);
 }

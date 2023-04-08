@@ -1,19 +1,20 @@
 #!/usr/bin/env node
 
-import {resolve} from 'path';
-import {exit} from 'process';
-import {banner} from './helpers';
-import {program} from 'commander';
-import {LIB_VERSION} from './version';
-import {install, createNewProject, gradleCommands} from './core/index';
-import {compileContracts} from './compile';
-import {testContracts} from './test';
-import {deployContracts} from './deploy';
-import {optimizeContracts} from './deploy/optimize';
-import {generateKeystore, goloop} from './goloop';
-import {initSandbox, startSandbox, stopSandbox} from './sandbox';
+import { resolve } from 'path';
+import { exit } from 'process';
+import { banner } from './helpers';
+import { program } from 'commander';
+import { LIB_VERSION } from './version';
+import { install, createNewProject, gradleCommands, createAccount } from './core/index';
+import { compileContracts } from './compile';
+import { testContracts } from './test';
+import { deployContracts } from './deploy';
+import { optimizeContracts } from './deploy/optimize';
+import { generateKeystore, goloop } from './goloop';
+import { initSandbox, startSandbox, stopSandbox } from './sandbox';
 import { localDrogonImageId } from './helpers/docker';
 import { DROGON_IMAGE } from './constants';
+import { startTheGradleDaemon, stopTheGradleDaemon } from './gradle';
 
 const main = async () => {
   banner();
@@ -37,13 +38,34 @@ const main = async () => {
     .description('Initialize a new Drogon project')
     .action(async () => {
       const localImage = await localDrogonImageId(DROGON_IMAGE)
-      if(!localImage) {
+      if (!localImage) {
         console.error('Error: drogon pre-requisites not met. Are you sure you performed the drogon install before this?')
         process.exit()
       }
-      await createNewProject();
+      let projectPath = await createNewProject();
+      // await createAccount(projectPath)
     });
 
+  //TODO: Implement Gradle start and stop logics. From this point, every gradle command should use this docker
+  program
+    .command('start')
+    .description('Start the Gradle daemon inside the project')
+    .option('-p, --path [string]', 'Path of your Drogon Project', './')
+    .action(function (this: any) {
+      const path = resolve(this.opts().path);
+      startTheGradleDaemon(path, this.args);
+    });
+
+  program
+    .command('stop')
+    .description('Stop the Gradle daemon inside the project')
+    .option('-p, --path [string]', 'Path of your Drogon Project', './')
+    .action(function (this: any) {
+      const path = resolve(this.opts().path);
+      stopTheGradleDaemon(path, this.args);
+    });
+
+  // 
   program
     .command('compile')
     .allowUnknownOption()
@@ -89,9 +111,14 @@ const main = async () => {
     .allowUnknownOption()
     .description('Deploy contracts from the Drogon project')
     .option('-p, --path [string]', 'Path of your Drogon Project', './')
+
+    .option('-l, --local', 'Deploy contracts to local node')
+    .option('-s, --lisbon', 'Deploy contracts to lisbon node')
+    .option('-c, --custom [node]', 'Deploy contracts to Custom node')
+
     .action(function (this: any) {
       const path = resolve(this.opts().path);
-      deployContracts(path, this.args);
+      deployContracts(path,this.opts(), this.args);
     });
 
   program
@@ -102,7 +129,7 @@ const main = async () => {
     .option('-s, --password [string]', 'Password for the keystore', 'gochain')
     .action(function (this: any) {
       const path = resolve(this.opts().path);
-      generateKeystore(path, this.args);
+      generateKeystore(path, this.opts().password, this.args);
     });
 
   program

@@ -71,7 +71,7 @@ const fetchProject = async (
     }
   );
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  container.on('stream', (stream: any) => {});
+  await container.on('stream', (stream: any) => {});
 };
 
 export const runTackle = async (projectName: string, destination: string) => {

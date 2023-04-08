@@ -1,8 +1,10 @@
 import * as fs from 'fs';
-import {textSync} from 'figlet';
-import {exit} from 'process';
+import { textSync } from 'figlet';
+import { exit } from 'process';
 import chalk from 'chalk';
 import signale from 'signale';
+import path from 'path';
+import crypto from 'crypto';
 
 export const banner = function () {
   const banner = textSync('Drogon!', {
@@ -111,27 +113,38 @@ export class ProgressBar {
       if (this._pos === this.progressBar.length) this._pos = 0;
 
       process.stdout.clearLine(0);
-      process.stdout.write(`\b\r${this.progressBar[this._pos]}`);
+      process.stdout.write(`\r${this.progressBar[this._pos]}`);
       this._pos += 1;
     }, this.interval);
   }
 
   stop() {
     clearInterval(this.intervalID);
+    this.intervalID = null;
+    process.stdout.clearLine(0);
+    process.stdout.write(`\r${this.DONE} ${this.msg}\n`);
   }
 
   stopWithMessageAndSymbol(symbol: string, msg: string) {
     this.stop();
-    process.stdout.write(`\b\r${symbol} ${msg}`);
+    process.stdout.write(`\r${symbol} ${msg}`);
   }
 
   stopWithMessage(msg: string) {
     this.stop();
-    process.stdout.write(`\b\r${this.SPARKLE} ${msg}\n`);
+    process.stdout.write(`\r${this.SPARKLE} ${msg}`);
   }
 
   error(msg: string) {
     this.stop();
-    process.stderr.write(`\b\r${this.ERROR} ${msg}`);
+    process.stderr.write(`\r${this.ERROR} ${msg}`);
   }
+}
+
+// Generates a unique container name for a given project path
+export const getContainerNameForProject = (projectPath: string, imageName: string, containerNamePrefix: string) => {
+  const hash = crypto.createHash('sha256').update(projectPath).digest('hex');
+  const projectName = path.basename(projectPath);
+  const containerName = `${containerNamePrefix}-${projectName}-${hash}`;
+  return containerName;
 }
