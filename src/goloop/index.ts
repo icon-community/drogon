@@ -1,16 +1,24 @@
 // goloop ks
 import signale from 'signale';
-import {ensureCWDDrogonProject} from '../helpers';
-import {mountAndRunCommand} from '../helpers/docker';
+import { ensureCWDDrogonProject } from '../helpers';
+import { mountAndRunCommand } from '../helpers/docker';
 
-export const generateKeystore = async (projectPath: string, args: any) => {
-  ensureCWDDrogonProject(projectPath);
+export const generateKeystore = async (projectPath: string, password: any, args: any) => {
+  // ensureCWDDrogonProject(projectPath);
 
   signale.pending('Generating Keystore...');
-  const command = `goloop ks gen -o /goloop/app/.keystore.json -p ${args.password}`;
-  mountAndRunCommand(projectPath, args, command, (exitCode: any) => {
-    signale.success('Done');
-    if (exitCode !== 0) process.exit(exitCode);
+  let command = `goloop ks gen --out /goloop/app/.keystore.json `
+  if (password) {
+    command += `--password ${password}`;
+  }
+
+  await mountAndRunCommand(projectPath, args, command, (exitCode: any) => {
+    if (exitCode) {
+      signale.fatal('Failed to generate Keystore');
+      process.exit(exitCode);
+    } else {
+      signale.success('Done generating Keystore');
+    }
   });
 };
 
@@ -19,8 +27,12 @@ export const goloop = async (projectPath: string, args: any) => {
 
   signale.pending('Running goloop command');
   const command = 'goloop';
-  mountAndRunCommand(projectPath, args, command, (exitCode: any) => {
-    signale.success('Done');
-    if (exitCode !== 0) process.exit(exitCode);
+  await mountAndRunCommand(projectPath, args, command, (exitCode: any) => {
+    if (exitCode) {
+      signale.fatal('Failed to run goloop command');
+      process.exit(exitCode);
+    } else {
+      signale.success('Finished running goloop command');
+    }
   });
 };
