@@ -40,3 +40,13 @@ jobs:
           docker tag goloop/gochain:latest iconcommunity/gochain:latest
           docker push iconcommunity/gochain:latest
         working-directory: goloop
+      
+      - name: Build gochain-icon-image
+        run: make gochain-icon-image
+        working-directory: goloop
+
+      - name: Push gochain-icon-image to docker hub
+        run: |
+          docker tag goloop/gochain-icon:latest iconcommunity/gochain-icon:latest
+          docker push iconcommunity/gochain-icon:latest
+        working-directory: goloop
