@@ -41,6 +41,13 @@ export const checkIfFileExists = (file: string): boolean => {
   return false;
 };
 
+export const importJson = (file: string):  any =>{
+    if (!checkIfFileExists(file))
+      return false
+    
+    return require(file);
+}
+
 export const ensureCWDDrogonProject = (projectPath: string) => {
   if (checkIfFileExists(`${projectPath}/drogon-config.json`)) return;
 

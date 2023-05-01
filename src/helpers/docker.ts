@@ -59,8 +59,7 @@ export const runAContainerInBackground = async (
   args: any,
 ) => {
   const docker = dockerInit();
-
-  if (args) command = `${command} ${args.join(' ')}`;
+  if (args) command = `${command} ${args}`;
 
   const container = await docker.createContainer({
     name: getContainerNameForProject(projectPath, DROGON_IMAGE, "drogon"),
@@ -135,12 +134,13 @@ export const mountAndRunCommandInContainer = async (
   args: any,
   command: string,
   cb: any,
+  logToStdout: boolean,
 ) => {
   const docker = dockerInit();
 
   if (args) command = `${command} ${args.join(' ')}`;
 
-  const container = await docker.getContainer(containerName);
+  const container = docker.getContainer(containerName);
   
   await container.attach({
     stderr: true,
@@ -150,6 +150,8 @@ export const mountAndRunCommandInContainer = async (
     hijack: true,
   });
 
+  let output  = ""
+  
   // Execute a command in the container
   container.exec(
     {
@@ -170,14 +172,21 @@ export const mountAndRunCommandInContainer = async (
           
         });
 
-        docker.modem.demuxStream(stream, process.stdout, process.stderr);
+        stream.on('data', async(chunk: any) => {
+          output += chunk.toString()
+        })
+
+        if (logToStdout) {
+          docker.modem.demuxStream(stream, process.stdout, process.stderr);
+        }
+          
       });
 
       const id = setInterval(() => {
         exec.inspect({}, (err: any, status: any) => {
           if (status.Running === false) {
             clearInterval(id);
-            cb(status.ExitCode);
+            cb(status.ExitCode, output);
           }
         });
       }, 100);
@@ -189,7 +198,8 @@ export const mountAndRunCommandInContainer = async (
 
 export async function interactWithDockerContainer(
   containerName: string,
-  destination: string
+  destination: string,
+  command: string,
 ) {
   const docker = new Docker();
   const container = await docker.getContainer(containerName);
@@ -216,7 +226,7 @@ export async function interactWithDockerContainer(
       Cmd: [
         'sh',
         '-c',
-        `stty columns ${process.stdout.columns} rows ${process.stdout.rows} && tackle sudoblockio/tackle-icon-sc-poc`,
+        command,
       ],
     },
     (err: any, exec: any) => {
@@ -296,7 +306,7 @@ export const mountAndRunCommandWithOutput = (
               stream.on('end', function() {
                 // End of stdout
                 container.stop().then(() => {
-                    // container stopped
+                  // container stopped
                 });
               });
 

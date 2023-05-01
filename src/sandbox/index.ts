@@ -87,10 +87,9 @@ export const startSandbox = (projectPath: string, args: any) => {
   // runSandboxCommand(projectPath, 'goloop server start');
   // runAContainerInBackground(projectPath, 'goloop server start', args).then(() => {
 
-
   // })
-  mountAndRunCommandWithOutput(projectPath, args, command, (exitCode: any, output: any) => {
 
+  mountAndRunCommandWithOutput(projectPath, args, command, (exitCode: any, output: any) => {
     console.log(exitCode)
     console.log(output)
     process.exit(exitCode)

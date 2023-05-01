@@ -115,10 +115,16 @@ const main = async () => {
     .option('-l, --local', 'Deploy contracts to local node')
     .option('-s, --lisbon', 'Deploy contracts to lisbon node')
     .option('-c, --custom [node]', 'Deploy contracts to Custom node')
+    .option('-d, --config [file]', 'Drogon config file.', 'drogon-config.json')
+    .option('-k, --password [string]', 'Password for the keystore', 'gochain')
 
     .action(function (this: any) {
       const path = resolve(this.opts().path);
-      deployContracts(path,this.opts(), this.args);
+      deployContracts(path,this.opts(), this.args)
+      .catch(err => {
+        console.error(err);
+        process.exit(1)
+      });;
     });
 
   program

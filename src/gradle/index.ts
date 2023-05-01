@@ -1,6 +1,6 @@
 import signale from "signale";
 import { ensureCWDDrogonProject, getContainerNameForProject } from "../helpers";
-import { mountAndRunCommandInContainer, mountAndRunCommandWithOutput, runAContainerInBackground, stopContainerWithName } from "../helpers/docker";
+import { mountAndRunCommandInContainer, runAContainerInBackground, stopContainerWithName } from "../helpers/docker";
 import { DROGON_IMAGE } from "../constants";
 
 export const startTheGradleDaemon = (projectPath: string, args: any) => {
@@ -10,9 +10,6 @@ export const startTheGradleDaemon = (projectPath: string, args: any) => {
 
     runAContainerInBackground(projectPath, args, command).then(async () => {
         signale.success('Started Drogon daemon');
-        // const container = getContainerNameForProject(projectPath, DROGON_IMAGE, "drogon")
-        // const command = "gradle --daemon"
-        // await mountAndRunCommandInContainer(container, projectPath, args, command, (code: any) => { process.exit(code) })
     })
 }
 
@@ -25,6 +22,6 @@ export const stopTheGradleDaemon = (projectPath: string, args: any) => {
         await stopContainerWithName(container)
         signale.success('Stopped Drogon daemon');
         process.exit(code)
-    })
+    }, true)
 }
 

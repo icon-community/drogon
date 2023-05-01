@@ -16,5 +16,5 @@ export const testContracts = (projectPath: string, args: any) => {
       signale.success('Testing contracts successful');
     }
     process.exit(exitCode);
-  })
+  }, true)
 };

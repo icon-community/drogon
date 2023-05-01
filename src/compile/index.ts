@@ -7,12 +7,13 @@ export const compileContracts = (projectPath: string, args: any) => {
   ensureCWDDrogonProject(projectPath);
 
   signale.pending('Compiling contracts');
-  mountAndCompile(projectPath, args, (exitCode: any) => {
+  mountAndCompile(projectPath, args, (exitCode: any, output: any) => {
     if(exitCode) {
       signale.fatal('Failed');
       process.exit(exitCode);
     } else {
       signale.success('Done');
+      process.exit(exitCode);
     }
   });
 };
@@ -20,5 +21,5 @@ export const compileContracts = (projectPath: string, args: any) => {
 export const mountAndCompile = (projectPath: string, args: any, cb: any) => {
   const command = 'gradle build';
   const container = getContainerNameForProject(projectPath, DROGON_IMAGE, "drogon")
-  mountAndRunCommandInContainer(container, projectPath, args, command, cb)
+  mountAndRunCommandInContainer(container, projectPath, args, command, cb, true)
 };
