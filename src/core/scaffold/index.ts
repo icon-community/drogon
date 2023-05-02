@@ -1,6 +1,6 @@
 import axios from 'axios';
 import {basename} from 'path';
-import {DROGON_IMAGE} from '../../constants';
+import {DROGON_IMAGE, DROGON_NETWORK} from '../../constants';
 
 import {panic, ProgressBar} from '../../helpers';
 import {dockerInit, interactWithDockerContainer} from '../../helpers/docker';
@@ -64,6 +64,7 @@ const fetchProject = async (
       AttachStdout: true,
       AttachStderr: true,
       WorkingDir: '/home',
+      NetworkMode: DROGON_NETWORK
     },
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     (err: any, data: any, container: any) => {
@@ -81,6 +82,7 @@ export const runTackle = async (projectName: string, destination: string) => {
     HostConfig: {
       AutoRemove: true,
       Binds: [`${destination}:/home/${projectName}`],
+      NetworkMode: DROGON_NETWORK
     },
     Image: DROGON_IMAGE,
     Tty: true,
