@@ -1,13 +1,17 @@
 // goloop ks
 import signale from 'signale';
-import { ensureCWDDrogonProject } from '../helpers';
-import { mountAndRunCommand } from '../helpers/docker';
+import {ensureCWDDrogonProject} from '../helpers';
+import {mountAndRunCommand} from '../helpers/docker';
 
-export const generateKeystore = async (projectPath: string, password: any, args: any) => {
+export const generateKeystore = async (
+  projectPath: string,
+  password: any,
+  args: any
+) => {
   // ensureCWDDrogonProject(projectPath);
 
   signale.pending('Generating Keystore...');
-  let command = `goloop ks gen --out ./.keystore.json `
+  let command = `goloop ks gen --out ./.keystore.json `;
   if (password) {
     command += `--password ${password}`;
   }

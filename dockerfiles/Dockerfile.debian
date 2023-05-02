@@ -10,7 +10,6 @@ ENV LANG en_US.utf8
 # Setup Java & Gradle
 RUN apt-get update && apt-get install -y openjdk-11-jdk build-essential coreutils git python curl
 
-# ENV JAVA_HOME=/usr/lib/jvm/java-1.11.0-openjdk-arm64/
 RUN ARCH=$(uname -m) \
     && if [ "$ARCH" = "aarch64" ]; then \
          JAVA_HOME="/usr/lib/jvm/java-1.11.0-openjdk-arm64/"; \

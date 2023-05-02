@@ -1,14 +1,21 @@
 import * as fs from 'fs';
-import { basename } from 'path';
+import {basename} from 'path';
 import {
   DROGON_IMAGE,
   GOCHAIN_IMAGE,
   ICON_ICONENV,
   ICON_SANDBOX_DATA_REPO,
 } from '../constants';
-import { verifySourcePath } from '../core/scaffold';
-import { ensureCWDDrogonProject, panic, ProgressBar } from '../helpers';
-import { dockerInit, mountAndRunCommandWithOutput, runAContainerInBackground } from '../helpers/docker';
+import {verifySourcePath} from '../core/scaffold';
+import {ensureCWDDrogonProject, getContainerNameForProject, panic, ProgressBar} from '../helpers';
+import {
+  dockerInit,
+  mountAndRunCommandInContainer,
+  mountAndRunCommandWithOutput,
+  runAContainerInBackground,
+  stopContainerWithName,
+} from '../helpers/docker';
+import signale from 'signale';
 
 const sandbox_folder = '.drogon/sandbox';
 
@@ -52,7 +59,7 @@ export const scaffoldSandboxData = async (
 
   await verifySourcePath(repo);
   await fetchProject(repo, destination);
-  
+
   progressBar.stopWithMessage('Scaffolding done 🎉');
 };
 
@@ -65,7 +72,7 @@ export const initSandbox = (projectPath: string, args: any) => {
 
   ensureCWDDrogonProject(projectPath);
 
-  fs.mkdirSync(`${projectPath}/.drogon/sandbox`, { recursive: true });
+  fs.mkdirSync(`${projectPath}/.drogon/sandbox`, {recursive: true});
 
   scaffoldSandboxData(
     'data/single',
@@ -83,35 +90,31 @@ export const initSandbox = (projectPath: string, args: any) => {
 export const startSandbox = (projectPath: string, args: any) => {
   console.log(`${projectPath}./${sandbox_folder}/single`);
   ensureCWDDrogonProject(projectPath);
-  const command = 'goloop server start'
-  // runSandboxCommand(projectPath, 'goloop server start');
-  // runAContainerInBackground(projectPath, 'goloop server start', args).then(() => {
 
-  // })
+  const container = getContainerNameForProject(
+    projectPath,
+    GOCHAIN_IMAGE,
+    'sandbox'
+  );
 
-  mountAndRunCommandWithOutput(projectPath, args, command, (exitCode: any, output: any) => {
-    console.log(exitCode)
-    console.log(output)
-    process.exit(exitCode)
-  })
+  runSandboxCommand(projectPath, container, '/goloop/run.sh');
 };
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const stopSandbox = (projectPath: string, args: any) => {
   ensureCWDDrogonProject(projectPath);
 
-  fs.readFile(`${projectPath}/.drogon/.sandbox`, (err, data) => {
-    if (err) panic(err.message);
-    console.log('Shutting down sandbox...');
-    const docker = dockerInit();
-    const containerId = data.toString().split('n')[0];
-    const container = docker.getContainer(containerId);
-    container.stop();
+  const container = getContainerNameForProject(
+    projectPath,
+    GOCHAIN_IMAGE,
+    'sandbox'
+  );
 
-    fs.unlinkSync(`${projectPath}/.drogon/.sandbox`);
-    console.log('Shutting down sandbox successful.');
+  stopContainerWithName(container).then(() => {
+    console.log('Sandbox stopped!');
   });
 };
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const pauseSandbox = (projectPath: string, args: any) => {
   ensureCWDDrogonProject(projectPath);
@@ -123,28 +126,28 @@ export const unpauseSandbox = (projectPath: string, args: any) => {
 
 export const runSandboxCommand = async (
   projectPath: string,
+  name:string,  
   command: string
 ) => {
-  // WIP
   const docker = dockerInit();
 
   docker.createContainer(
     {
       Image: GOCHAIN_IMAGE,
+      name: name,
       HostConfig: {
-        AutoRemove: true,
+        AutoRemove: false,
         Binds: [
           `${projectPath}:/goloop/app`,
           `${projectPath}/${sandbox_folder}/single:/goloop/data`,
           `${projectPath}/${sandbox_folder}/chain:/goloop/chain`,
         ],
         PortBindings: {
-          '9082/tcp': [{ HostPort: '9082' }],
+          '9082/tcp': [{HostPort: '9082'}],
         },
       },
       Tty: true,
-      Env: ICON_ICONENV,
-      ExposedPorts: { '9082/tcp': {} },
+      ExposedPorts: {'9082/tcp': {}},
     },
     (err, container: any) => {
       if (err) panic(err);
@@ -154,13 +157,14 @@ export const runSandboxCommand = async (
         container.exec(
           {
             Cmd: ['sh', '-c', command],
-            AttachStderr: false,
-            AttachStdout: false,
+            AttachStderr: true,
+            AttachStdout: true,
             WorkingDir: '/goloop/app',
           },
           (err: any, exec: any) => {
             if (err) panic(err);
-            exec.start({ Tty: false, Detach: true }, (err: any, stream: any) => {
+            exec.start({Tty: false, Detach: true}, (err: any, stream: any) => {
+              if (err) panic(err);
               docker.modem.demuxStream(stream, process.stdout, process.stderr);
             });
 

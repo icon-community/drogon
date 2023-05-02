@@ -1,20 +1,25 @@
 #!/usr/bin/env node
 
-import { resolve } from 'path';
-import { exit } from 'process';
-import { banner } from './helpers';
-import { program } from 'commander';
-import { LIB_VERSION } from './version';
-import { install, createNewProject, gradleCommands, createAccount } from './core/index';
-import { compileContracts } from './compile';
-import { testContracts } from './test';
-import { deployContracts } from './deploy';
-import { optimizeContracts } from './deploy/optimize';
-import { generateKeystore, goloop } from './goloop';
-import { initSandbox, startSandbox, stopSandbox } from './sandbox';
-import { localDrogonImageId } from './helpers/docker';
-import { DROGON_IMAGE } from './constants';
-import { startTheGradleDaemon, stopTheGradleDaemon } from './gradle';
+import {resolve} from 'path';
+import {exit} from 'process';
+import {banner} from './helpers';
+import {program} from 'commander';
+import {LIB_VERSION} from './version';
+import {
+  install,
+  createNewProject,
+  gradleCommands,
+  createAccount,
+} from './core/index';
+import {compileContracts} from './compile';
+import {testContracts} from './test';
+import {deployContracts} from './deploy';
+import {optimizeContracts} from './deploy/optimize';
+import {generateKeystore, goloop} from './goloop';
+import {initSandbox, startSandbox, stopSandbox} from './sandbox';
+import {localDrogonImageId} from './helpers/docker';
+import {DROGON_IMAGE} from './constants';
+import {startTheGradleDaemon, stopTheGradleDaemon} from './gradle';
 
 const main = async () => {
   banner();
@@ -37,10 +42,12 @@ const main = async () => {
     .command('init')
     .description('Initialize a new Drogon project')
     .action(async () => {
-      const localImage = await localDrogonImageId(DROGON_IMAGE)
+      const localImage = await localDrogonImageId(DROGON_IMAGE);
       if (!localImage) {
-        console.error('Error: drogon pre-requisites not met. Are you sure you performed the drogon install before this?')
-        process.exit()
+        console.error(
+          'Error: drogon pre-requisites not met. Are you sure you performed the drogon install before this?'
+        );
+        process.exit();
       }
       let projectPath = await createNewProject();
       // await createAccount(projectPath)
@@ -65,7 +72,7 @@ const main = async () => {
       stopTheGradleDaemon(path, this.args);
     });
 
-  // 
+  //
   program
     .command('compile')
     .allowUnknownOption()
@@ -120,11 +127,10 @@ const main = async () => {
 
     .action(function (this: any) {
       const path = resolve(this.opts().path);
-      deployContracts(path,this.opts(), this.args)
-      .catch(err => {
+      deployContracts(path, this.opts(), this.args).catch(err => {
         console.error(err);
-        process.exit(1)
-      });;
+        process.exit(1);
+      });
     });
 
   program

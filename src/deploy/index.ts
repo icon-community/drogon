@@ -1,67 +1,128 @@
 import signale from 'signale';
-import { checkIfFileExists, ensureCWDDrogonProject, getContainerNameForProject, importJson, listAvailableContracts, panic } from '../helpers';
-import { mountAndRunCommand, mountAndRunCommandInContainer } from '../helpers/docker';
+import {
+  checkIfFileExists,
+  ensureCWDDrogonProject,
+  getContainerNameForProject,
+  importJson,
+  listAvailableContracts,
+  panic,
+} from '../helpers';
+import {
+  mountAndRunCommandInContainer,
+} from '../helpers/docker';
 import { DROGON_IMAGE } from '../constants';
+import Wallet from '../core/keystore';
+import chalk from 'chalk';
 
-export const deployContracts = async (projectPath: string, opts: any, args: any) => {
+export const deployContracts = async (
+  projectPath: string,
+  opts: any,
+  args: any
+) => {
   ensureCWDDrogonProject(projectPath);
-
-  let destination = ""
-
-  if (opts.local) {
-    destination = "deployToLocal"
-  } else if (opts.lisbon) {
-    destination = "deployToLisbon"
-  } else if (opts.custom) {
-    destination = `deployTo${opts.custom}`
-  }
 
   // read the drogon config file
   const config = importJson(`${projectPath}/` + opts.config);
-  if (!config)
-    panic('Please run the command inside the Drogon Project');
+  if (!config) panic('Please run the command inside the Drogon Project');
 
-  // get configured keystore from config
-  const keystore = config.keystore
+  let destination = '';
+  let network = '';
 
-  if (!checkIfFileExists(`${projectPath}/` + keystore)) {
-    panic(`Configured Keystore file ${keystore} not found in folder ${projectPath}`);
+  if (opts.local) {
+    destination = 'deployToLocal';
+    network = config.networks.development.uri;
+  } else if (opts.lisbon) {
+    destination = 'deployToLisbon';
+    network = config.networks.lisbon.uri;
+  } else if (opts.custom) {
+    destination = `deployTo${opts.custom}`;
   }
 
-  
-  const password = opts.password
-  const getAddressCmd = `goloop ks pubkey -k=${keystore} -p=${password}`
+  // get configured keystore from config
+  const keystoreFile = config.keystore;
 
-  let address = ""
-  const container = getContainerNameForProject(projectPath, DROGON_IMAGE, "drogon")
+  if (!checkIfFileExists(`${projectPath}/` + keystoreFile)) {
+    panic(
+      `Configured Keystore file ${keystoreFile} not found in folder ${projectPath}`
+    );
+  }
 
-  mountAndRunCommandInContainer(container, projectPath, args, getAddressCmd, (exitCode: any, output: string) => {
-    address = output.substring(8, output.length - 1)
-  }, false)
-  
-  // TODO: Check balance RPC call on the configured network
+  const keystore = importJson(`${projectPath}/` + keystoreFile);
+  const password = opts.password;
+
+  const wallet = await Wallet.loadKeyStore(keystore, password, false);
+  console.log(`Loaded wallet ${chalk.green(wallet.getAddress())}`);
+
+  await wallet.showBalances();
+  await wallet.ensureHasBalance();
 
   signale.pending('Deploying contracts');
-  listAvailableContracts(projectPath, (projects: any) => {
 
-    for (const i in projects) {
+  const container = getContainerNameForProject(
+    projectPath,
+    DROGON_IMAGE,
+    'drogon'
+  );
 
-      let command = `gradle src:${i}:${destination} -PkeystoreName=/goloop/app/${keystore}`;
+  const projects = await listAvailableContracts(projectPath, undefined);
+  const keys = Object.keys(projects);
+  const numProjects = keys.length;
 
-      if (password) {
-        command += ` -PkeystorePass=${password}`
-      }
+  let tasks: any = {};
 
-      mountAndRunCommand(projectPath, args, command, (exitCode: any) => {
+  for (let i = 0; i < numProjects; i++) {
+    let project = keys[i];
+
+    let command = `gradle src:${project}:${destination} -PkeystoreName=/goloop/app/${keystoreFile}`;
+
+    if (password) {
+      command += ` -PkeystorePass=${password}`;
+    }
+
+    let initialWalletBalance = await wallet.getBalance();
+
+    mountAndRunCommandInContainer(
+      container,
+      projectPath,
+      args,
+      command,
+      async (exitCode: any) => {
         if (exitCode) {
           signale.fatal('Failed to deploy contracts');
           process.exit(exitCode);
         } else {
-          signale.success('Done deploying contracts');
-        }
-      }).then(() => {
+          signale.success(`Done deploying ${project} contract`);
 
-      });
+          let currentBalance = await wallet.getBalance();
+          tasks[project] = {
+            current: currentBalance,
+            initial: initialWalletBalance,
+          };
+        }
+      },
+      true
+    );
+  }
+
+  const id = setInterval(() => {
+    const keys = Object.keys(tasks);
+    const numTasks = keys.length;
+    if (numTasks == numProjects) {
+      let totalCost = 0;
+      for (var i in tasks) {
+        console.log(
+          chalk.blue(`Cost of deploying ${i} (ICX):     `),
+          chalk.red(tasks[i].initial - tasks[i].current)
+        );
+        totalCost += tasks[i].initial - tasks[i].current;
+      }
+
+      console.log(
+        chalk.blue('Total cost of all deployments (ICX):    '),
+        chalk.red(totalCost.toFixed(4))
+      );
+      clearInterval(id);
+      wallet.showBalances();
     }
   });
 };

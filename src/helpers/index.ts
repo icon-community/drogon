@@ -1,6 +1,6 @@
 import * as fs from 'fs';
-import { textSync } from 'figlet';
-import { exit } from 'process';
+import {textSync} from 'figlet';
+import {exit} from 'process';
 import chalk from 'chalk';
 import signale from 'signale';
 import path from 'path';
@@ -41,12 +41,11 @@ export const checkIfFileExists = (file: string): boolean => {
   return false;
 };
 
-export const importJson = (file: string):  any =>{
-    if (!checkIfFileExists(file))
-      return false
-    
-    return require(file);
-}
+export const importJson = (file: string): any => {
+  if (!checkIfFileExists(file)) return false;
+
+  return require(file);
+};
 
 export const ensureCWDDrogonProject = (projectPath: string) => {
   if (checkIfFileExists(`${projectPath}/drogon-config.json`)) return;
@@ -54,34 +53,41 @@ export const ensureCWDDrogonProject = (projectPath: string) => {
   panic('Please run the command inside the Drogon Project');
 };
 
-function removeItemOnce(arr: any, value: string) {
+export const removeItemOnce = (arr: any, value: string) => {
   const index = arr.indexOf(value);
   if (index > -1) {
     arr.splice(index, 1);
   }
   return arr;
-}
+};
 
-export const listAvailableContracts = (projectPath: string, cb: any) => {
+export const listAvailableContracts = (
+  projectPath: string,
+  cb: any | undefined
+): Promise<string[]> => {
   if (!checkIfFileExists(`${projectPath}/drogon-config.json`))
     panic('Please run the command inside the Drogon Project');
 
   const projects: any = {};
 
-  fs.readdir(`${projectPath}/src`, (err, files) => {
-    if (err) {
-      return console.log('Unable to scan directory: ' + err);
-    }
-
-    files = removeItemOnce(files, 'build');
-
-    files.forEach(file => {
-      if (fs.lstatSync(`${projectPath}/src/${file}`).isDirectory()) {
-        projects[file] = `${projectPath}/src/${file}`;
+  return new Promise<string[]>((resolve, reject) => {
+    fs.readdir(`${projectPath}/src`, (err, files) => {
+      if (err) {
+        return console.log('Unable to scan directory: ' + err);
       }
-    });
 
-    cb(projects);
+      files = removeItemOnce(files, 'build');
+
+      files.forEach(file => {
+        if (fs.lstatSync(`${projectPath}/src/${file}`).isDirectory()) {
+          projects[file] = `${projectPath}/src/${file}`;
+        }
+      });
+
+      if (cb) cb(projects);
+
+      resolve(projects);
+    });
   });
 };
 
@@ -149,9 +155,13 @@ export class ProgressBar {
 }
 
 // Generates a unique container name for a given project path
-export const getContainerNameForProject = (projectPath: string, imageName: string, containerNamePrefix: string) => {
+export const getContainerNameForProject = (
+  projectPath: string,
+  imageName: string,
+  containerNamePrefix: string,
+) => {
   const hash = crypto.createHash('sha256').update(projectPath).digest('hex');
   const projectName = path.basename(projectPath);
   const containerName = `${containerNamePrefix}-${projectName}-${hash}`;
   return containerName;
-}
+};

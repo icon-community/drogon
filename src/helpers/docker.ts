@@ -1,6 +1,7 @@
-import Docker, { Image } from 'dockerode';
+import Docker from 'dockerode';
 import {DROGON_IMAGE} from '../constants';
 import {getContainerNameForProject, panic} from '../helpers';
+import {PassThrough} from 'stream';
 
 export const dockerInit = () => {
   return new Docker(); //defaults to above if env variables are not used
@@ -10,7 +11,7 @@ export const pullImage = async (image: string) => {
   const docker = dockerInit();
 
   return new Promise<void>((resolve, reject) => {
-    docker.pull(image, (err:any, stream:any) => {
+    docker.pull(image, (err: any, stream: any) => {
       if (err) {
         reject(err);
       } else {
@@ -32,50 +33,54 @@ export const pullImage = async (image: string) => {
     });
   });
 };
-export const localDrogonImageId = async (image: string) :Promise<string | null>  => {
+export const localDrogonImageId = async (
+  image: string
+): Promise<string | null> => {
   const docker = dockerInit();
-  const list = await docker.listImages()
+  const list = await docker.listImages();
   const filtered = list.filter(o => {
-    if(o.RepoTags) {
-      return o.RepoTags.indexOf(image) > -1
+    if (o.RepoTags) {
+      return o.RepoTags.indexOf(image) > -1;
     }
-    return false
-  })
+    return false;
+  });
   if (filtered.length > 0) {
-    return filtered[0].Id
+    return filtered[0].Id;
   }
-  return null
-}
-export const removeImage =async (imageId:string) : Promise<boolean>=> {
+  return null;
+};
+export const removeImage = async (imageId: string): Promise<boolean> => {
   const docker = dockerInit();
-  const image = await docker.getImage(imageId)
-  await image.remove()
-  return true
-}
+  const image = await docker.getImage(imageId);
+  await image.remove();
+  return true;
+};
 
 export const runAContainerInBackground = async (
   projectPath: string,
+  image: string, 
   command: string,
   args: any,
+  containerNamePrefix: string
 ) => {
   const docker = dockerInit();
   if (args) command = `${command} ${args}`;
 
   const container = await docker.createContainer({
-    name: getContainerNameForProject(projectPath, DROGON_IMAGE, "drogon"),
-    Image: DROGON_IMAGE,
+    name: getContainerNameForProject(projectPath, image, containerNamePrefix),
+    Image: image,
     Cmd: ['sh', '-c', command],
     HostConfig: {
       AutoRemove: true,
       Binds: [`${projectPath}:/goloop/app`],
     },
   });
-
+  
   await container.start({});
   return container;
 };
 
-export const mountAndRunCommand = async(
+export const mountAndRunCommand = async (
   projectPath: string,
   args: any,
   command: string,
@@ -94,7 +99,7 @@ export const mountAndRunCommand = async(
       },
       Tty: false,
     },
-    async(err, container: any) => {
+    async (err, container: any) => {
       if (err) panic(err);
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       await container.start((err: any, stream: any) => {
@@ -114,10 +119,7 @@ export const mountAndRunCommand = async(
               exec.inspect({}, (err: any, status: any) => {
                 if (status.Running === false) {
                   clearInterval(id);
-                  cb(status.ExitCode)
-                  // container.stop({}, () => {
-                  //   cb(status.ExitCode);
-                  // });
+                  cb(status.ExitCode);
                 }
               });
             }, 100);
@@ -128,30 +130,74 @@ export const mountAndRunCommand = async(
   );
 };
 
+export const AsyncRunCommandInContainer = async (
+  containerName: string,
+  args: any,
+  command: string,
+  logToStdout: boolean
+): Promise<string> => {
+  const docker = new Docker();
+
+  if (args) command = `${command} ${args.join(' ')}`;
+
+  const container = docker.getContainer(containerName);
+
+  const output = new PassThrough();
+
+  // Execute a command in the container
+  const exec = await container.exec({
+    AttachStdout: true,
+    AttachStderr: true,
+    Tty: true,
+    WorkingDir: '/goloop/app',
+    Cmd: ['sh', '-c', command],
+  });
+
+  const stream = await exec.start({hijack: true, Tty: false, Detach: false});
+
+  stream.pipe(output);
+
+  if (logToStdout) {
+    docker.modem.demuxStream(stream, process.stdout, process.stderr);
+  }
+
+  const [code, out] = await Promise.all([
+    new Promise<number>(resolve => {
+      exec.inspect((err, status: any) => {
+        if (err || !status) {
+          resolve(-1);
+        } else {
+          resolve(status.ExitCode);
+        }
+      });
+    }),
+
+    new Promise<string>(resolve => {
+      output.on('data', (chunk: any) => {
+        resolve(chunk.toString());
+      });
+    }),
+  ]);
+
+  return out;
+};
+
 export const mountAndRunCommandInContainer = async (
   containerName: string,
   projectPath: string,
   args: any,
   command: string,
   cb: any,
-  logToStdout: boolean,
+  logToStdout: boolean
 ) => {
   const docker = dockerInit();
 
   if (args) command = `${command} ${args.join(' ')}`;
 
   const container = docker.getContainer(containerName);
-  
-  await container.attach({
-    stderr: true,
-    stdin: true,
-    stdout: true,
-    stream: true,
-    hijack: true,
-  });
 
-  let output  = ""
-  
+  let output = '';
+
   // Execute a command in the container
   container.exec(
     {
@@ -160,26 +206,22 @@ export const mountAndRunCommandInContainer = async (
       AttachStdin: true,
       Tty: true,
       WorkingDir: '/goloop/app',
-      Cmd: [
-        'sh',
-        '-c',
-        command
-      ],
+      Cmd: ['sh', '-c', command],
     },
     (err: any, exec: any) => {
-      exec.start({stream: true, hijack: true}, (err: any, stream: any) => {
-        stream.on('end', async () => {
-          
-        });
+      if (err)
+        panic(`Failed to start container. ${err}`)
 
-        stream.on('data', async(chunk: any) => {
-          output += chunk.toString()
-        })
+      exec.start({stream: true, hijack: true}, (err: any, stream: any) => {
+        stream.on('end', async () => {});
+
+        stream.on('data', async (chunk: any) => {
+          output += chunk.toString();
+        });
 
         if (logToStdout) {
           docker.modem.demuxStream(stream, process.stdout, process.stderr);
         }
-          
       });
 
       const id = setInterval(() => {
@@ -192,14 +234,12 @@ export const mountAndRunCommandInContainer = async (
       }, 100);
     }
   );
-
 };
-
 
 export async function interactWithDockerContainer(
   containerName: string,
   destination: string,
-  command: string,
+  command: string
 ) {
   const docker = new Docker();
   const container = await docker.getContainer(containerName);
@@ -223,11 +263,7 @@ export async function interactWithDockerContainer(
       AttachStdin: true,
       Tty: true,
       WorkingDir: destination,
-      Cmd: [
-        'sh',
-        '-c',
-        command,
-      ],
+      Cmd: ['sh', '-c', command],
     },
     (err: any, exec: any) => {
       exec.start({stream: true, hijack: true}, (err: any, stream: any) => {
@@ -278,7 +314,7 @@ export const mountAndRunCommandWithOutput = (
 
   docker.createContainer(
     {
-      name: getContainerNameForProject(projectPath, DROGON_IMAGE, "drogon"),
+      name: getContainerNameForProject(projectPath, DROGON_IMAGE, 'drogon'),
       Image: DROGON_IMAGE,
       HostConfig: {
         AutoRemove: true,
@@ -299,11 +335,11 @@ export const mountAndRunCommandWithOutput = (
           },
           (err: any, exec: any) => {
             exec.start({Tty: false, Detach: false}, (err: any, stream: any) => {
-              stream.on('data', function(chunk: any) {
+              stream.on('data', function (chunk: any) {
                 output += chunk.toString();
               });
 
-              stream.on('end', function() {
+              stream.on('end', function () {
                 // End of stdout
                 container.stop().then(() => {
                   // container stopped
@@ -330,9 +366,8 @@ export const mountAndRunCommandWithOutput = (
   );
 };
 
-
 export const stopContainerWithName = async (containerName: string) => {
   const docker = new Docker();
   const container = await docker.getContainer(containerName);
-  await container.stop()
-}
+  await container.stop();
+};

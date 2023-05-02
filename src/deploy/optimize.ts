@@ -1,6 +1,11 @@
 import signale from 'signale';
-import {ensureCWDDrogonProject, listAvailableContracts} from '../helpers';
-import {mountAndRunCommand} from '../helpers/docker';
+import {
+  ensureCWDDrogonProject,
+  getContainerNameForProject,
+  listAvailableContracts,
+} from '../helpers';
+import {mountAndRunCommandInContainer} from '../helpers/docker';
+import {DROGON_IMAGE} from '../constants';
 
 export const optimizeContracts = (projectPath: string, args: any) => {
   ensureCWDDrogonProject(projectPath);
@@ -11,16 +16,34 @@ export const optimizeContracts = (projectPath: string, args: any) => {
     for (const i in projects) {
       const command = `gradle src:${i}:optimizedJar`;
 
-      mountAndRunCommand(projectPath, args, command, (exitCode: any) => {
-        if(exitCode) {
-          signale.fatal('Failed to optimize contracts');
+      mountAndOptimize(projectPath, command, args, (exitCode: any) => {
+        if (exitCode) {
+          signale.fatal('Failed to optimize contract');
         } else {
-          signale.success('Done optimizing contracts');
+          signale.success('Done optimizing contract');
         }
-        if (exitCode !== 0) process.exit(exitCode);
-      }).then(() => {
-        
       });
     }
   });
+};
+
+export const mountAndOptimize = (
+  projectPath: string,
+  command: string,
+  args: any,
+  cb: any
+) => {
+  const container = getContainerNameForProject(
+    projectPath,
+    DROGON_IMAGE,
+    'drogon'
+  );
+  mountAndRunCommandInContainer(
+    container,
+    projectPath,
+    args,
+    command,
+    cb,
+    true
+  );
 };

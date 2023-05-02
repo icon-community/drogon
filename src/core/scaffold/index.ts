@@ -86,6 +86,10 @@ export const runTackle = async (projectName: string, destination: string) => {
     Tty: true,
   });
 
-  const command = `stty columns ${process.stdout.columns} rows ${process.stdout.rows} && tackle sudoblockio/tackle-icon-sc-poc`
-  await interactWithDockerContainer('drogon-container', `/home/${projectName}`, command);
+  const command = `stty columns ${process.stdout.columns} rows ${process.stdout.rows} && tackle sudoblockio/tackle-icon-sc-poc`;
+  await interactWithDockerContainer(
+    'drogon-container',
+    `/home/${projectName}`,
+    command
+  );
 };

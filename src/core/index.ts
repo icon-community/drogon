@@ -1,4 +1,4 @@
-import { basename, resolve } from 'path';
+import {basename, resolve} from 'path';
 import prompts from 'prompts';
 import * as fs from 'fs';
 import {
@@ -8,18 +8,26 @@ import {
   ProgressBar,
   safeexit,
 } from '../helpers';
-import { localDrogonImageId, removeImage, mountAndRunCommand, pullImage } from '../helpers/docker';
+import {
+  localDrogonImageId,
+  removeImage,
+  mountAndRunCommand,
+  pullImage,
+} from '../helpers/docker';
 
-import { DROGON_IMAGE, GOCHAIN_IMAGE, ICON_TEMPLATES_REPO } from '../constants';
-import { mainBuildGradle, gradleSettings, gitignore } from './contents';
-import { Config } from './config';
-import { runTackle, scaffoldProject } from './scaffold';
+import {DROGON_IMAGE, GOCHAIN_IMAGE, ICON_TEMPLATES_REPO} from '../constants';
+import {mainBuildGradle, gradleSettings, gitignore} from './contents';
+import {Config} from './config';
+import {runTackle, scaffoldProject} from './scaffold';
 import signale from 'signale';
-import { generateKeystore } from '../goloop';
+import {generateKeystore} from '../goloop';
 
 export const install = async () => {
   // signale.pending('Installing Drogon...Hold tight, it might take a while!');
-  const progressBar = new ProgressBar('Installing Drogon...Hold tight, it might take a while!...', 100);
+  const progressBar = new ProgressBar(
+    'Installing Drogon...Hold tight, it might take a while!...',
+    100
+  );
   progressBar.start();
 
   await fetch_drogon();
@@ -27,23 +35,22 @@ export const install = async () => {
 
   progressBar.stopWithMessage('Drogon ready for use.');
   // signale.success('Drogon ready for use.');
-  process.exit()
+  process.exit();
 };
 
 export const fetch_drogon = async () => {
-
-  const localImage = await localDrogonImageId(DROGON_IMAGE)
+  const localImage = await localDrogonImageId(DROGON_IMAGE);
   if (localImage) {
     // since we must force pull even if it exists, we should remove it from disk
-    await removeImage(localImage)
+    await removeImage(localImage);
   }
   await pullImage(DROGON_IMAGE);
 };
 
 export const fetch_score_image = async () => {
-  const localImage = await localDrogonImageId(GOCHAIN_IMAGE)
+  const localImage = await localDrogonImageId(GOCHAIN_IMAGE);
   if (localImage) {
-    await removeImage(localImage)
+    await removeImage(localImage);
   }
 
   await pullImage(GOCHAIN_IMAGE);
@@ -54,23 +61,22 @@ export const createAccount = async (projectPath: string) => {
     type: 'toggle',
     name: 'generateAccount',
     message: 'Do you want to generate a keystore for this project?',
-  })
+  });
 
   if (response.generateAccount) {
     // read password from user
     const resp = await prompts({
       type: 'password',
       name: 'password',
-      message: 'Enter your password for your keystore file:'
+      message: 'Enter your password for your keystore file:',
     });
 
-    let password = resp.password
-    
-    if(password===undefined)
-      password = ''
-    await generateKeystore(projectPath, password, [ ])
+    let password = resp.password;
+
+    if (password === undefined) password = '';
+    await generateKeystore(projectPath, password, []);
   }
-}
+};
 
 export const createNewProject = async () => {
   const response = await prompts([
@@ -88,15 +94,21 @@ export const createNewProject = async () => {
       message: 'Do you want to initialize your Drogon project with samples?',
     },
     {
-      type: prev => prev ? 'multiselect' : null,
+      type: prev => (prev ? 'multiselect' : null),
       name: 'sampleGeneratorType',
-      message: "Which code generator tool do you want to use?",
+      message: 'Which code generator tool do you want to use?',
       choices: [
-        { title: 'Tackle (https://github.com/sudoblockio/tackle-icon-sc-poc)', value: 'tackle' },
-        { title: 'Java SCORE examples(https://github.com/icon-project/java-score-examples)', value: 'javascore' }
-      ]
+        {
+          title: 'Tackle (https://github.com/sudoblockio/tackle-icon-sc-poc)',
+          value: 'tackle',
+        },
+        {
+          title:
+            'Java SCORE examples(https://github.com/icon-project/java-score-examples)',
+          value: 'javascore',
+        },
+      ],
     },
-    
   ]);
 
   const projectPath = resolve(response.path);
@@ -120,23 +132,21 @@ export const createNewProject = async () => {
   }
 
   await initialiseProject(projectPath);
-  await createAccount(projectPath)
+  await createAccount(projectPath);
 
   if (response.createSamples) {
     if (response.sampleGeneratorType == 'javascore') {
       const boilerplate = await pickABoilerplate();
       await scaffoldProject(boilerplate, ICON_TEMPLATES_REPO, projectPath);
       await initProjectIncludes(projectPath, boilerplate);
-
     } else if (response.sampleGeneratorType == 'tackle') {
       const projectName = response.path;
       await runTackle(projectName, `${projectPath}/src`);
       await initProjectIncludes(projectPath, projectName);
-
     }
   }
 
-  return projectPath
+  return projectPath;
 };
 
 export const pickABoilerplate = async () => {
@@ -146,13 +156,13 @@ export const pickABoilerplate = async () => {
       name: 'boilerplate',
       message: 'Pick a boilerplate',
       choices: [
-        { title: 'Hello World', value: 'hello-world' },
-        { title: 'IRC2 Token', value: 'irc2-token' },
-        { title: 'IRC3 Token', value: 'irc3-token' },
-        { title: 'IRC31 Token', value: 'irc31-token' },
-        { title: 'Multisig Wallet', value: 'multisig-wallet' },
-        { title: 'Sample Crowdsale', value: 'sample-crowdsale' },
-        { title: 'Sample Token', value: 'sample-token' },
+        {title: 'Hello World', value: 'hello-world'},
+        {title: 'IRC2 Token', value: 'irc2-token'},
+        {title: 'IRC3 Token', value: 'irc3-token'},
+        {title: 'IRC31 Token', value: 'irc31-token'},
+        {title: 'Multisig Wallet', value: 'multisig-wallet'},
+        {title: 'Sample Crowdsale', value: 'sample-crowdsale'},
+        {title: 'Sample Token', value: 'sample-token'},
       ],
     },
   ]);
@@ -163,7 +173,7 @@ export const pickABoilerplate = async () => {
 const initialiseProject = async (path: string) => {
   const name = basename(path);
 
-  fs.mkdirSync(`${path}/src`, { recursive: true });
+  fs.mkdirSync(`${path}/src`, {recursive: true});
 
   const config = Config.generateNew(name);
 
@@ -198,7 +208,7 @@ const initialiseProject = async (path: string) => {
 export const addProjectToIncludes = async (
   path: string,
   boilerplate: string
-) => { };
+) => {};
 /*eslint-disable */
 
 const initProjectIncludes = async (path: string, boilerplate: string) => {
@@ -210,7 +220,7 @@ const initProjectIncludes = async (path: string, boilerplate: string) => {
     if (err) {
       return console.log(err);
     }
-    
+
     const result = data.replace(/include \(\)/g, includes);
 
     fs.writeFile(`${path}/settings.gradle`, result, 'utf8', err => {
@@ -232,4 +242,4 @@ export const gradleCommands = async (projectPath: string, args: any) => {
 const mountAndRunGradle = async (projectPath: string, args: any, cb: any) => {
   const command = '/goloop/gradlew --build-cache -g /goloop/app/.cache/';
   await mountAndRunCommand(projectPath, args, command, cb);
-}
+};
