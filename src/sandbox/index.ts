@@ -2,7 +2,6 @@ import * as fs from 'fs';
 import {basename} from 'path';
 import {
   DROGON_IMAGE,
-  DROGON_NETWORK,
   GOCHAIN_IMAGE,
   ICON_ICONENV,
   ICON_SANDBOX_DATA_REPO,
@@ -40,7 +39,6 @@ const fetchProject = async (source: string, destination: string) => {
       AttachStdout: true,
       AttachStderr: true,
       WorkingDir: '/home',
-      NetworkMode: DROGON_NETWORK
     },
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     (err: any, data: any, container: any) => {
@@ -132,14 +130,12 @@ export const runSandboxCommand = async (
   command: string
 ) => {
   const docker = dockerInit();
-
   docker.createContainer(
     {
       Image: GOCHAIN_IMAGE,
       name: name,
       HostConfig: {
         AutoRemove: false,
-        NetworkMode: DROGON_NETWORK,
         Binds: [
           `${projectPath}:/goloop/app`,
           `${projectPath}/${sandbox_folder}/single:/goloop/data`,

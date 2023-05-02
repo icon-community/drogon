@@ -1,5 +1,5 @@
 export const DROGON_IMAGE = 'iconcommunity/drogon:latest';
-export const DROGON_NETWORK = 'drogon-network'
+export const DROGON_NETWORK_NODE = 'drogon-local-node'
 
 export const GOCHAIN_IMAGE = 'iconcommunity/gochain:latest';
 

@@ -13,7 +13,6 @@ import {
   removeImage,
   mountAndRunCommand,
   pullImage,
-  createNetwork,
 } from '../helpers/docker';
 
 import {DROGON_IMAGE, GOCHAIN_IMAGE, ICON_TEMPLATES_REPO} from '../constants';
@@ -33,7 +32,6 @@ export const install = async () => {
 
   await fetch_drogon();
   await fetch_score_image();
-  await create_docker_network()
 
   progressBar.stopWithMessage('Drogon ready for use.');
   // signale.success('Drogon ready for use.');
@@ -57,13 +55,6 @@ export const fetch_score_image = async () => {
 
   await pullImage(GOCHAIN_IMAGE);
 };
-export const create_docker_network = async () => {
-  try {
-    await createNetwork()
-  } catch(e) {
-    panic(`Failed to create drogon specific network. Aborting...\n ${e}`);
-  }
-}
 
 export const createAccount = async (projectPath: string) => {
   const response = await prompts({

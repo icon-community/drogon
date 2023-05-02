@@ -1,5 +1,5 @@
 import Docker from 'dockerode';
-import {DROGON_IMAGE, DROGON_NETWORK} from '../constants';
+import {DROGON_IMAGE} from '../constants';
 import {getContainerNameForProject, panic} from '../helpers';
 import {PassThrough} from 'stream';
 
@@ -55,11 +55,11 @@ export const removeImage = async (imageId: string): Promise<boolean> => {
   await image.remove();
   return true;
 };
-export const createNetwork = async () => {
+export const createNetwork = async (name: string) => {
   const docker = dockerInit();
   try {
-    await docker.createNetwork({ Name: DROGON_NETWORK, Attachable: true, CheckDuplicate : false})
-    console.log(`Successfully created ${DROGON_NETWORK}`);
+    await docker.createNetwork({ Name: name, Attachable: true, CheckDuplicate : false})
+    console.log(`Successfully created ${name}`);
     return
   } catch (error) {
     throw error
@@ -82,8 +82,7 @@ export const runAContainerInBackground = async (
     Cmd: ['sh', '-c', command],
     HostConfig: {
       AutoRemove: true,
-      Binds: [`${projectPath}:/goloop/app`],
-      NetworkMode: DROGON_NETWORK
+      Binds: [`${projectPath}:/goloop/app`]
     },
   });
   
@@ -107,7 +106,6 @@ export const mountAndRunCommand = async (
       HostConfig: {
         AutoRemove: true,
         Binds: [`${projectPath}:/goloop/app`],
-        NetworkMode: DROGON_NETWORK
       },
       Tty: false,
     },
@@ -331,7 +329,6 @@ export const mountAndRunCommandWithOutput = (
       HostConfig: {
         AutoRemove: true,
         Binds: [`${projectPath}:/goloop/app`],
-        NetworkMode: DROGON_NETWORK
       },
       Tty: false,
     },
