@@ -96,7 +96,7 @@ export const startSandbox = (projectPath: string, args: any) => {
     GOCHAIN_IMAGE,
     'sandbox'
   );
-
+  //TODO: do not exec if the container already exists
   runSandboxCommand(projectPath, container, '/goloop/run.sh');
 };
 

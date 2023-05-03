@@ -240,6 +240,6 @@ export const gradleCommands = async (projectPath: string, args: any) => {
 };
 
 const mountAndRunGradle = async (projectPath: string, args: any, cb: any) => {
-  const command = '/goloop/gradlew --build-cache -g /goloop/app/.cache/';
+  const command = 'gradle wrapper --build-cache -g /goloop/app/.cache/';
   await mountAndRunCommand(projectPath, args, command, cb);
 };
