@@ -53,13 +53,13 @@ export const scaffoldSandboxData = async (
   destination: string
 ) => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const progressBar = new ProgressBar('Scaffolding...', 100);
+  const progressBar = new ProgressBar('Initializing sandboxed local network...', 100);
   progressBar.start();
 
   await verifySourcePath(repo);
   await fetchProject(repo, destination);
 
-  progressBar.stopWithMessage('Scaffolding done 🎉');
+  progressBar.stopWithMessage('Initilized 🎉');
 };
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
