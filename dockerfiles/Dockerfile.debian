@@ -1,14 +1,13 @@
-FROM debian:11
+FROM iconcommunity/gochain:latest
 
-ENV DEBIAN_FRONTEND=noninteractive
-
-RUN apt-get update && apt-get install -y locales && rm -rf /var/lib/apt/lists/* \
-	&& localedef -i en_US -c -f UTF-8 -A /usr/share/locale/locale.alias en_US.UTF-8
+RUN apk update
 
 ENV LANG en_US.utf8
 
-# Setup Java & Gradle
-RUN apt-get update && apt-get install -y openjdk-11-jdk build-essential coreutils git python curl
+# install libraries
+RUN apk add --no-cache python3 py3-pip curl unzip gradle
+# install python3 and venv for tackle
+RUN pip3 install tackle
 
 RUN ARCH=$(uname -m) \
     && if [ "$ARCH" = "aarch64" ]; then \
@@ -19,34 +18,10 @@ RUN ARCH=$(uname -m) \
     && export JAVA_HOME \
     && echo "JAVA_HOME=$JAVA_HOME"
 
-COPY src/thirdparty/icon/gradlew /goloop/
-COPY src/thirdparty/icon/gradle/ /goloop/gradle/
-
 WORKDIR /root/
 
-RUN curl -L https://services.gradle.org/distributions/gradle-5.5.1-bin.zip -o gradle-5.5.1-bin.zip
-RUN apt-get install -y unzip
-RUN unzip gradle-5.5.1-bin.zip
-RUN rm gradle-5.5.1-bin.zip && mv gradle-5.5.1 /usr/local/gradle
-
-ENV GRADLE_HOME=/usr/local/gradle/bin
-
-# Setup go & goloop
-COPY --from=golang:1.18-bullseye /usr/local/go/ /usr/local/go/
-
-ENV PATH="/usr/local/go/bin:/usr/local/go/goloop/bin/:/usr/local/gradle/bin:${PATH}"
-
-WORKDIR /usr/local/go/
-
-# Install goloop
-RUN git clone https://github.com/icon-project/goloop.git 
-RUN cd goloop && GOBUILD_TAGS= make goloop 
-
-WORKDIR /goloop
-
-# install python3 and venv for tackle
-RUN apt-get install python3 python3-pip -y
-RUN pip3 install tackle
+ENV GRADLE_HOME /usr/local/gradle
+ENV PATH ${PATH}:${GRADLE_HOME}/bin
 
 WORKDIR /goloop/app/
 
