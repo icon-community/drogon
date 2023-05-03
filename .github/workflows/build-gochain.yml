@@ -1,11 +1,10 @@
 name: Build and publish the gochain image
 
 on:
-  push:
-    tags:
-      - '*'
-    branches:
-      - 'main'
+  workflow_run:
+    workflows: ["Release NPM Package"]
+    types: [completed]
+    
 env:
  GOLOOP_VERSION: v1.3.3
 
