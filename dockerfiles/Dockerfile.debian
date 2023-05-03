@@ -5,7 +5,7 @@ RUN apk update
 ENV LANG en_US.utf8
 
 # install libraries
-RUN apk add --no-cache python3 py3-pip curl unzip gradle
+RUN apk add --no-cache python3 py3-pip curl unzip gradle git
 # install python3 and venv for tackle
 RUN pip3 install tackle
 
