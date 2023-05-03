@@ -31,7 +31,7 @@ export const install = async () => {
   progressBar.start();
 
   await fetch_drogon();
-  await fetch_score_image();
+  // await fetch_score_image();
 
   progressBar.stopWithMessage('Drogon ready for use.');
   // signale.success('Drogon ready for use.');

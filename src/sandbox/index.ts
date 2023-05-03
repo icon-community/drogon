@@ -2,7 +2,6 @@ import * as fs from 'fs';
 import {basename} from 'path';
 import {
   DROGON_IMAGE,
-  GOCHAIN_IMAGE,
   ICON_ICONENV,
   ICON_SANDBOX_DATA_REPO,
 } from '../constants';
@@ -93,7 +92,7 @@ export const startSandbox = (projectPath: string, args: any) => {
 
   const container = getContainerNameForProject(
     projectPath,
-    GOCHAIN_IMAGE,
+    DROGON_IMAGE,
     'sandbox'
   );
   //TODO: do not exec if the container already exists
@@ -106,7 +105,7 @@ export const stopSandbox = (projectPath: string, args: any) => {
 
   const container = getContainerNameForProject(
     projectPath,
-    GOCHAIN_IMAGE,
+    DROGON_IMAGE,
     'sandbox'
   );
 
@@ -132,7 +131,7 @@ export const runSandboxCommand = async (
   const docker = dockerInit();
   docker.createContainer(
     {
-      Image: GOCHAIN_IMAGE,
+      Image: DROGON_IMAGE,
       name: name,
       HostConfig: {
         AutoRemove: false,

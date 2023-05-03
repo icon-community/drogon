@@ -1,5 +1,3 @@
-import { DROGON_NETWORK_NODE } from "../constants";
-
 enum Deployment {
   DeployJar = 0,
   DeployGoloop = 1,
@@ -35,10 +33,6 @@ export class Config {
     return {
       name: name,
       networks: {
-        development: {
-          uri: `http://${DROGON_NETWORK_NODE}:9082/api/v3`,
-          network_id: 0x4,
-        },
         local: {
           uri: 'http://localhost:9082/api/v3',
           network_id: 0x3,
