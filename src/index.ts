@@ -163,9 +163,10 @@ const main = async () => {
     .allowUnknownOption()
     .description('initialize the local network')
     .option('-p, --path [string]', 'Path of your Drogon Project', './')
+    .option('-k, --password [string]', 'Password for the keystore or for GOD Wallet', 'gochain')
     .action(function (this: any) {
       const path = resolve(this.opts().path);
-      initSandbox(path, this.args);
+      initSandbox(path, this.opts(), this.args);
     });
 
   sandbox

@@ -28,6 +28,7 @@ export const mountAndCompile = (projectPath: string, args: any, cb: any) => {
     DROGON_IMAGE,
     'drogon'
   );
+
   mountAndRunCommandInContainer(
     container,
     projectPath,

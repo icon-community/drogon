@@ -12,14 +12,20 @@ export const startTheGradleDaemon = (projectPath: string, args: any) => {
   const command = 'tail -f /dev/null';
   signale.pending('Starting Drogon daemon');
 
-  runAContainerInBackground(projectPath, DROGON_IMAGE, args, command, 'drogon').then(async () => {
+  runAContainerInBackground(
+    projectPath,
+    DROGON_IMAGE,
+    args,
+    command,
+    'drogon'
+  ).then(async () => {
     signale.success('Started Drogon daemon');
   });
 };
 
 export const stopTheGradleDaemon = (projectPath: string, args: any) => {
   ensureCWDDrogonProject(projectPath);
-  
+
   const container = getContainerNameForProject(
     projectPath,
     DROGON_IMAGE,

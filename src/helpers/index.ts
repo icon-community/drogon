@@ -63,32 +63,42 @@ export const removeItemOnce = (arr: any, value: string) => {
 
 export const listAvailableContracts = (
   projectPath: string,
-  cb: any | undefined
+  cb?: any
 ): Promise<string[]> => {
   if (!checkIfFileExists(`${projectPath}/drogon-config.json`))
     panic('Please run the command inside the Drogon Project');
 
   const projects: any = {};
 
-  return new Promise<string[]>((resolve, reject) => {
-    fs.readdir(`${projectPath}/src`, (err, files) => {
-      if (err) {
-        return console.log('Unable to scan directory: ' + err);
-      }
+  let files = fs.readdirSync(`${projectPath}/src/`);
+  files = removeItemOnce(files, 'build');
 
-      files = removeItemOnce(files, 'build');
-
-      files.forEach(file => {
-        if (fs.lstatSync(`${projectPath}/src/${file}`).isDirectory()) {
-          projects[file] = `${projectPath}/src/${file}`;
-        }
-      });
-
-      if (cb) cb(projects);
-
-      resolve(projects);
-    });
+  files.forEach(file => {
+    if (fs.lstatSync(`${projectPath}/src/${file}`).isDirectory()) {
+      projects[file] = `${projectPath}/src/${file}`;
+    }
   });
+
+  return projects;
+};
+
+export const listOptmizedContracts = async (
+  projectPath: string,
+  cb?: any
+): Promise<string[]> => {
+  let projects = await listAvailableContracts(projectPath);
+  let contracts: any = {};
+  for (var project in projects) {
+    let files = fs.readdirSync(`${projectPath}/src/${project}/build/libs/`);
+    for (var i in files) {
+      let file = files[i];
+      if (file.indexOf('-optimized.jar') != -1) {
+        contracts[file] = `src/${project}/build/libs/${file}`;
+      }
+    }
+  }
+
+  return contracts;
 };
 
 export class ProgressBar {
@@ -158,7 +168,7 @@ export class ProgressBar {
 export const getContainerNameForProject = (
   projectPath: string,
   imageName: string,
-  containerNamePrefix: string,
+  containerNamePrefix: string
 ) => {
   const hash = crypto.createHash('sha256').update(projectPath).digest('hex');
   const projectName = path.basename(projectPath);

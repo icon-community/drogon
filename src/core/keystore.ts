@@ -1,13 +1,14 @@
-import {panic} from '../helpers';
+import { panic } from '../helpers';
 import crypto from 'crypto';
-import {createHash} from 'crypto';
-import {scrypt} from 'ethereum-cryptography/scrypt';
-import {keccak256} from 'ethereum-cryptography/keccak';
-import {bytesToHex} from 'ethereum-cryptography/utils';
-import {secp256k1} from 'ethereum-cryptography/secp256k1';
-import {IsString, addHxPrefix, isPrivateKey} from '../crypto';
+import { createHash } from 'crypto';
+import { scrypt } from 'ethereum-cryptography/scrypt';
+import { keccak256 } from 'ethereum-cryptography/keccak';
+import { bytesToHex } from 'ethereum-cryptography/utils';
+import { secp256k1 } from 'ethereum-cryptography/secp256k1';
+import { IsString, addHxPrefix, isPrivateKey } from '../crypto';
 import * as https from 'https';
 import chalk from 'chalk';
+import { runGoloopCmd } from '../goloop';
 
 export interface KeyStore {
   version: 3;
@@ -39,9 +40,13 @@ export default class Wallet {
 
   private address: string;
 
+  private uri: string;
+
   private url: string;
 
-  constructor(privKey: typeof Buffer) {
+  private projectPath: string;
+
+  constructor(projectPath: string, privKey: typeof Buffer, network: string) {
     if (!privKey) {
       panic('A private key must be supplied to the constructor.');
     }
@@ -58,17 +63,26 @@ export default class Wallet {
       .slice(-40);
 
     this.address = addHxPrefix(address);
+
     this.url = `https://lisbon.tracker.solidwallet.io/v3/address/info?address=${this.address}`;
+    this.uri = network
+    this.projectPath = projectPath
+  }
+
+  setURI(uri: string) {
+    this.uri = uri
   }
 
   static async loadKeyStore(
+    projectPath: string,
+    network: string,
     keystore: KeyStore | string,
     password: string,
     nonStrict: boolean
   ): Promise<Wallet> {
     const seed = await LoadKeystore(keystore, password, nonStrict);
 
-    return new Wallet(seed as any);
+    return new Wallet(projectPath, seed as any, network);
   }
 
   /*
@@ -90,9 +104,16 @@ export default class Wallet {
     }
   }
 
-  async getBalance(): Promise<number> {
-    const data = await this.getInfo();
-    return parseFloat(data.balance);
+  async getBalance(): Promise<BigInt> {
+    const command = `goloop rpc balance ${this.address} --uri ${this.uri}`
+
+    return new Promise((resolve) => {
+      runGoloopCmd(this.projectPath, command, (output: string) => {
+        let balance = output.replace(/[^\w\s]/gi, '')
+        let balanceFloat = BigInt(balance);
+        resolve(balanceFloat);
+      })
+    });
   }
 
   async getBalanceUsd(): Promise<number> {
@@ -101,22 +122,17 @@ export default class Wallet {
   }
 
   async showBalances() {
-    const data = await this.getInfo();
-    console.log('Balance (ICX) :   ' + chalk.green(data.balance));
-    console.log(
-      'Balance ($)   :  ' + chalk.red('$') + chalk.green(data.icxUsd)
-    );
+    await this.getBalance().then((balance) => {
+      this.display('Balance (ICX) :   ', balance);
+    })
   }
 
-  async updateDeploymentCosts() {
-    const data = await this.getInfo();
+  display(prefix: string, number: BigInt) {
+    const divisor = 10**18;
+    const numberFormatted = (Number(number) / Number(divisor)).toLocaleString('en-US', { minimumFractionDigits: 4, maximumFractionDigits: 4 });
+    console.log(`${prefix} ${chalk.green(numberFormatted)}`);
   }
 
-  async ensureHasBalance() {
-    const data = await this.getInfo();
-    if (data.balance == 0)
-      panic(`Not enough balance on Wallet ${chalk.red(this.address)}`);
-  }
 }
 
 export const LoadKeystore = async (
@@ -132,10 +148,10 @@ export const LoadKeystore = async (
     typeof keystore === 'object'
       ? keystore
       : JSON.parse(
-          nonStrict
-            ? (keystore as unknown as string).toLowerCase()
-            : (keystore as string)
-        );
+        nonStrict
+          ? (keystore as unknown as string).toLowerCase()
+          : (keystore as string)
+      );
 
   if (json.version !== 3) {
     panic('This is not a V3 wallet.');

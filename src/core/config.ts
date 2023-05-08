@@ -38,9 +38,9 @@ export class Config {
           network_id: 0x3,
         },
         lisbon: {
-          uri: 'http://lisbon.net.solidwallet.io/api/v3',
+          uri: 'https://lisbon.net.solidwallet.io/api/v3',
           network_id: 0x2,
-        }
+        },
       },
       deployJar: false,
       keystore: '.keystore.json',

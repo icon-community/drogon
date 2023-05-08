@@ -5,9 +5,13 @@ RUN apk update
 ENV LANG en_US.utf8
 
 # install libraries
-RUN apk add --no-cache python3 py3-pip curl unzip gradle git
+RUN apk add --no-cache python3 py3-pip curl unzip git openjdk11
 # install python3 and venv for tackle
 RUN pip3 install tackle
+
+WORKDIR /usr/local/
+RUN curl -OL https://services.gradle.org/distributions/gradle-5.5.1-all.zip
+RUN unzip gradle-5.5.1-all.zip && mv gradle-5.5.1 gradle/
 
 RUN ARCH=$(uname -m) \
     && if [ "$ARCH" = "aarch64" ]; then \
@@ -17,6 +21,17 @@ RUN ARCH=$(uname -m) \
        fi \
     && export JAVA_HOME \
     && echo "JAVA_HOME=$JAVA_HOME"
+
+# setup goloop
+COPY --from=golang:1.18-alpine /usr/local/go/ /usr/local/go/
+
+ENV PATH /usr/local/gradle/bin:/usr/local/go/goloop/bin/:/usr/local/go/bin:${PATH}
+
+WORKDIR /usr/local/go/
+
+# Install goloop
+RUN git clone https://github.com/icon-project/goloop.git 
+RUN cd goloop && GOBUILD_TAGS= make goloop 
 
 WORKDIR /root/
 

@@ -5,12 +5,11 @@ import {
   getContainerNameForProject,
   importJson,
   listAvailableContracts,
+  listOptmizedContracts,
   panic,
 } from '../helpers';
-import {
-  mountAndRunCommandInContainer,
-} from '../helpers/docker';
-import { DROGON_IMAGE } from '../constants';
+import {mountAndRunCommandInContainer} from '../helpers/docker';
+import {DROGON_IMAGE} from '../constants';
 import Wallet from '../core/keystore';
 import chalk from 'chalk';
 
@@ -30,7 +29,7 @@ export const deployContracts = async (
 
   if (opts.local) {
     destination = 'deployToLocal';
-    network = config.networks.development.uri;
+    network = config.networks.local.uri;
   } else if (opts.lisbon) {
     destination = 'deployToLisbon';
     network = config.networks.lisbon.uri;
@@ -50,11 +49,10 @@ export const deployContracts = async (
   const keystore = importJson(`${projectPath}/` + keystoreFile);
   const password = opts.password;
 
-  const wallet = await Wallet.loadKeyStore(keystore, password, false);
+  const wallet = await Wallet.loadKeyStore(projectPath, network, keystore, password, false);
   console.log(`Loaded wallet ${chalk.green(wallet.getAddress())}`);
 
   await wallet.showBalances();
-  await wallet.ensureHasBalance();
 
   signale.pending('Deploying contracts');
 
@@ -64,17 +62,18 @@ export const deployContracts = async (
     'drogon'
   );
 
-  const projects = await listAvailableContracts(projectPath, undefined);
+  const projects = await listAvailableContracts(projectPath);
+
   const keys = Object.keys(projects);
   const numProjects = keys.length;
 
   let tasks: any = {};
 
-  for (let i = 0; i < numProjects; i++) {
-    let project = keys[i];
-
+  for(var i=0; i<numProjects; i++) {
+    let project = keys[i]
+    
     let command = `gradle src:${project}:${destination} -PkeystoreName=/goloop/app/${keystoreFile}`;
-
+    
     if (password) {
       command += ` -PkeystorePass=${password}`;
     }
@@ -86,7 +85,7 @@ export const deployContracts = async (
       projectPath,
       args,
       command,
-      async (exitCode: any) => {
+      async (exitCode: any, output: string) => {
         if (exitCode) {
           signale.fatal('Failed to deploy contracts');
           process.exit(exitCode);
@@ -108,19 +107,20 @@ export const deployContracts = async (
     const keys = Object.keys(tasks);
     const numTasks = keys.length;
     if (numTasks == numProjects) {
-      let totalCost = 0;
+      let totalCost = BigInt(0);
       for (var i in tasks) {
-        console.log(
-          chalk.blue(`Cost of deploying ${i} (ICX):     `),
-          chalk.red(tasks[i].initial - tasks[i].current)
-        );
-        totalCost += tasks[i].initial - tasks[i].current;
+        const cost = BigInt (tasks[i].initial - tasks[i].current)
+        if(!Number.isNaN(cost))
+        {
+          wallet.display(`Cost of deploying ${i} (ICX):     `, cost)
+          totalCost = totalCost + cost;
+        }
       }
 
-      console.log(
-        chalk.blue('Total cost of all deployments (ICX):    '),
-        chalk.red(totalCost.toFixed(4))
-      );
+      if(totalCost!==0n)
+      {
+        wallet.display('Total cost of all deployments (ICX):    ', totalCost)
+      }
       clearInterval(id);
       wallet.showBalances();
     }

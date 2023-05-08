@@ -6,7 +6,9 @@
     "esModuleInterop": true,
     "declaration": true,
     "sourceMap": false,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "target": "ES2020"
   },
+  
   "include": ["src/**/*.ts", "test/**/*.ts"]
 }

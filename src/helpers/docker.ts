@@ -33,6 +33,7 @@ export const pullImage = async (image: string) => {
     });
   });
 };
+
 export const localDrogonImageId = async (
   image: string
 ): Promise<string | null> => {
@@ -49,26 +50,32 @@ export const localDrogonImageId = async (
   }
   return null;
 };
+
 export const removeImage = async (imageId: string): Promise<boolean> => {
   const docker = dockerInit();
   const image = await docker.getImage(imageId);
   await image.remove();
   return true;
 };
+
 export const createNetwork = async (name: string) => {
   const docker = dockerInit();
   try {
-    await docker.createNetwork({ Name: name, Attachable: true, CheckDuplicate : false})
+    await docker.createNetwork({
+      Name: name,
+      Attachable: true,
+      CheckDuplicate: false,
+    });
     console.log(`Successfully created ${name}`);
-    return
+    return;
   } catch (error) {
-    throw error
+    throw error;
   }
-}
+};
 
 export const runAContainerInBackground = async (
   projectPath: string,
-  image: string, 
+  image: string,
   command: string,
   args: any,
   containerNamePrefix: string
@@ -82,10 +89,10 @@ export const runAContainerInBackground = async (
     Cmd: ['sh', '-c', command],
     HostConfig: {
       AutoRemove: true,
-      Binds: [`${projectPath}:/goloop/app`]
+      Binds: [`${projectPath}:/goloop/app`],
     },
   });
-  
+
   await container.start({});
   return container;
 };
@@ -219,8 +226,7 @@ export const mountAndRunCommandInContainer = async (
       Cmd: ['sh', '-c', command],
     },
     (err: any, exec: any) => {
-      if (err)
-        panic(`Failed to start container. ${err}`)
+      if (err) panic(`Failed to start container. ${err}`);
 
       exec.start({stream: true, hijack: true}, (err: any, stream: any) => {
         stream.on('end', async () => {});
