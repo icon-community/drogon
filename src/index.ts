@@ -121,6 +121,7 @@ const main = async () => {
 
     .option('-l, --local', 'Deploy contracts to local node')
     .option('-s, --lisbon', 'Deploy contracts to lisbon node')
+    .option('-m, --mainnet', 'Deploy contracts to lisbon node')
     .option('-c, --custom [node]', 'Deploy contracts to Custom node')
     .option('-d, --config [file]', 'Drogon config file.', 'drogon-config.json')
     .option('-k, --password [string]', 'Password for the keystore', 'gochain')

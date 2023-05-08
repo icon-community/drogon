@@ -15,7 +15,7 @@ import {
   pullImage,
 } from '../helpers/docker';
 
-import {DROGON_IMAGE, GOCHAIN_IMAGE, ICON_TEMPLATES_REPO} from '../constants';
+import {DROGON_IMAGE, ICON_TEMPLATES_REPO} from '../constants';
 import {mainBuildGradle, gradleSettings, gitignore} from './contents';
 import {Config} from './config';
 import {runTackle, scaffoldProject} from './scaffold';
@@ -45,15 +45,6 @@ export const fetch_drogon = async () => {
     await removeImage(localImage);
   }
   await pullImage(DROGON_IMAGE);
-};
-
-export const fetch_score_image = async () => {
-  const localImage = await localDrogonImageId(GOCHAIN_IMAGE);
-  if (localImage) {
-    await removeImage(localImage);
-  }
-
-  await pullImage(GOCHAIN_IMAGE);
 };
 
 export const createAccount = async (projectPath: string) => {

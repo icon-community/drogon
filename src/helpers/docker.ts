@@ -58,21 +58,6 @@ export const removeImage = async (imageId: string): Promise<boolean> => {
   return true;
 };
 
-export const createNetwork = async (name: string) => {
-  const docker = dockerInit();
-  try {
-    await docker.createNetwork({
-      Name: name,
-      Attachable: true,
-      CheckDuplicate: false,
-    });
-    console.log(`Successfully created ${name}`);
-    return;
-  } catch (error) {
-    throw error;
-  }
-};
-
 export const runAContainerInBackground = async (
   projectPath: string,
   image: string,
@@ -145,58 +130,6 @@ export const mountAndRunCommand = async (
       });
     }
   );
-};
-
-export const AsyncRunCommandInContainer = async (
-  containerName: string,
-  args: any,
-  command: string,
-  logToStdout: boolean
-): Promise<string> => {
-  const docker = new Docker();
-
-  if (args) command = `${command} ${args.join(' ')}`;
-
-  const container = docker.getContainer(containerName);
-
-  const output = new PassThrough();
-
-  // Execute a command in the container
-  const exec = await container.exec({
-    AttachStdout: true,
-    AttachStderr: true,
-    Tty: true,
-    WorkingDir: '/goloop/app',
-    Cmd: ['sh', '-c', command],
-  });
-
-  const stream = await exec.start({hijack: true, Tty: false, Detach: false});
-
-  stream.pipe(output);
-
-  if (logToStdout) {
-    docker.modem.demuxStream(stream, process.stdout, process.stderr);
-  }
-
-  const [code, out] = await Promise.all([
-    new Promise<number>(resolve => {
-      exec.inspect((err, status: any) => {
-        if (err || !status) {
-          resolve(-1);
-        } else {
-          resolve(status.ExitCode);
-        }
-      });
-    }),
-
-    new Promise<string>(resolve => {
-      output.on('data', (chunk: any) => {
-        resolve(chunk.toString());
-      });
-    }),
-  ]);
-
-  return out;
 };
 
 export const mountAndRunCommandInContainer = async (
@@ -316,71 +249,6 @@ export async function interactWithDockerContainer(
     }
   );
 }
-
-export const mountAndRunCommandWithOutput = (
-  projectPath: string,
-  args: any,
-  command: string,
-  cbWithOutput: any
-) => {
-  let output = '';
-  const docker = dockerInit();
-
-  if (args) command = `${command} ${args.join(' ')}`;
-
-  docker.createContainer(
-    {
-      name: getContainerNameForProject(projectPath, DROGON_IMAGE, 'drogon'),
-      Image: DROGON_IMAGE,
-      HostConfig: {
-        AutoRemove: true,
-        Binds: [`${projectPath}:/goloop/app`],
-      },
-      Tty: false,
-    },
-    (err, container: any) => {
-      if (err) panic(err);
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      container.start((err: any, stream: any) => {
-        container.exec(
-          {
-            Cmd: ['sh', '-c', command],
-            AttachStderr: true,
-            AttachStdout: true,
-            WorkingDir: '/goloop/app',
-          },
-          (err: any, exec: any) => {
-            exec.start({Tty: false, Detach: false}, (err: any, stream: any) => {
-              stream.on('data', function (chunk: any) {
-                output += chunk.toString();
-              });
-
-              stream.on('end', function () {
-                // End of stdout
-                container.stop().then(() => {
-                  // container stopped
-                });
-              });
-
-              docker.modem.demuxStream(stream, process.stdout, process.stderr);
-            });
-
-            const id = setInterval(() => {
-              exec.inspect({}, (err: any, status: any) => {
-                if (status.Running === false) {
-                  clearInterval(id);
-                  container.stop({}, () => {
-                    cbWithOutput(status.ExitCode, output);
-                  });
-                }
-              });
-            }, 100);
-          }
-        );
-      });
-    }
-  );
-};
 
 export const stopContainerWithName = async (containerName: string) => {
   const docker = new Docker();
