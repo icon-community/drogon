@@ -1,20 +1,25 @@
 #!/usr/bin/env node
 
-import { resolve } from 'path';
-import { exit } from 'process';
-import { banner } from './helpers';
-import { program } from 'commander';
-import { LIB_VERSION } from './version';
-import { install, createNewProject, gradleCommands, createAccount } from './core/index';
-import { compileContracts } from './compile';
-import { testContracts } from './test';
-import { deployContracts } from './deploy';
-import { optimizeContracts } from './deploy/optimize';
-import { generateKeystore, goloop } from './goloop';
-import { initSandbox, startSandbox, stopSandbox } from './sandbox';
-import { localDrogonImageId } from './helpers/docker';
-import { DROGON_IMAGE } from './constants';
-import { startTheGradleDaemon, stopTheGradleDaemon } from './gradle';
+import {resolve} from 'path';
+import {exit} from 'process';
+import {banner} from './helpers';
+import {program} from 'commander';
+import {LIB_VERSION} from './version';
+import {
+  install,
+  createNewProject,
+  gradleCommands,
+  createAccount,
+} from './core/index';
+import {compileContracts} from './compile';
+import {testContracts} from './test';
+import {deployContracts} from './deploy';
+import {optimizeContracts} from './deploy/optimize';
+import {generateKeystore, goloop} from './goloop';
+import {initSandbox, startSandbox, stopSandbox} from './sandbox';
+import {localDrogonImageId} from './helpers/docker';
+import {DROGON_IMAGE} from './constants';
+import {startTheGradleDaemon, stopTheGradleDaemon} from './gradle';
 
 const main = async () => {
   banner();
@@ -37,10 +42,12 @@ const main = async () => {
     .command('init')
     .description('Initialize a new Drogon project')
     .action(async () => {
-      const localImage = await localDrogonImageId(DROGON_IMAGE)
+      const localImage = await localDrogonImageId(DROGON_IMAGE);
       if (!localImage) {
-        console.error('Error: drogon pre-requisites not met. Are you sure you performed the drogon install before this?')
-        process.exit()
+        console.error(
+          'Error: drogon pre-requisites not met. Are you sure you performed the drogon install before this?'
+        );
+        process.exit();
       }
       let projectPath = await createNewProject();
       // await createAccount(projectPath)
@@ -65,7 +72,7 @@ const main = async () => {
       stopTheGradleDaemon(path, this.args);
     });
 
-  // 
+  //
   program
     .command('compile')
     .allowUnknownOption()
@@ -114,11 +121,21 @@ const main = async () => {
 
     .option('-l, --local', 'Deploy contracts to local node')
     .option('-s, --lisbon', 'Deploy contracts to lisbon node')
+    .option('-m, --mainnet', 'Deploy contracts to lisbon node')
     .option('-c, --custom [node]', 'Deploy contracts to Custom node')
+    .option('-d, --config [file]', 'Drogon config file.', 'drogon-config.json')
+    .option('-k, --password [string]', 'Password for the keystore', 'gochain')
+    .option(
+      '-u, --uri [string]',
+      'URI of network for goloop command to interact with'
+    )
 
     .action(function (this: any) {
       const path = resolve(this.opts().path);
-      deployContracts(path,this.opts(), this.args);
+      deployContracts(path, this.opts(), this.args).catch(err => {
+        console.error(err);
+        process.exit(1);
+      });
     });
 
   program
@@ -151,9 +168,14 @@ const main = async () => {
     .allowUnknownOption()
     .description('initialize the local network')
     .option('-p, --path [string]', 'Path of your Drogon Project', './')
+    .option(
+      '-k, --password [string]',
+      'Password for the keystore or for GOD Wallet',
+      'gochain'
+    )
     .action(function (this: any) {
       const path = resolve(this.opts().path);
-      initSandbox(path, this.args);
+      initSandbox(path, this.opts(), this.args);
     });
 
   sandbox

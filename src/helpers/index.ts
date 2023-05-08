@@ -1,6 +1,6 @@
 import * as fs from 'fs';
-import { textSync } from 'figlet';
-import { exit } from 'process';
+import {textSync} from 'figlet';
+import {exit} from 'process';
 import chalk from 'chalk';
 import signale from 'signale';
 import path from 'path';
@@ -41,41 +41,64 @@ export const checkIfFileExists = (file: string): boolean => {
   return false;
 };
 
+export const importJson = (file: string): any => {
+  if (!checkIfFileExists(file)) return false;
+
+  return require(file);
+};
+
 export const ensureCWDDrogonProject = (projectPath: string) => {
   if (checkIfFileExists(`${projectPath}/drogon-config.json`)) return;
 
   panic('Please run the command inside the Drogon Project');
 };
 
-function removeItemOnce(arr: any, value: string) {
+export const removeItemOnce = (arr: any, value: string) => {
   const index = arr.indexOf(value);
   if (index > -1) {
     arr.splice(index, 1);
   }
   return arr;
-}
+};
 
-export const listAvailableContracts = (projectPath: string, cb: any) => {
+export const listAvailableContracts = (
+  projectPath: string,
+  cb?: any
+): Promise<string[]> => {
   if (!checkIfFileExists(`${projectPath}/drogon-config.json`))
     panic('Please run the command inside the Drogon Project');
 
   const projects: any = {};
 
-  fs.readdir(`${projectPath}/src`, (err, files) => {
-    if (err) {
-      return console.log('Unable to scan directory: ' + err);
+  let files = fs.readdirSync(`${projectPath}/src/`);
+  files = removeItemOnce(files, 'build');
+
+  files.forEach(file => {
+    if (fs.lstatSync(`${projectPath}/src/${file}`).isDirectory()) {
+      projects[file] = `${projectPath}/src/${file}`;
     }
-
-    files = removeItemOnce(files, 'build');
-
-    files.forEach(file => {
-      if (fs.lstatSync(`${projectPath}/src/${file}`).isDirectory()) {
-        projects[file] = `${projectPath}/src/${file}`;
-      }
-    });
-
-    cb(projects);
   });
+
+  return projects;
+};
+
+export const listOptmizedContracts = async (
+  projectPath: string,
+  cb?: any
+): Promise<string[]> => {
+  let projects = await listAvailableContracts(projectPath);
+  let contracts: any = {};
+  for (var project in projects) {
+    let files = fs.readdirSync(`${projectPath}/src/${project}/build/libs/`);
+    for (var i in files) {
+      let file = files[i];
+      if (file.indexOf('-optimized.jar') != -1) {
+        contracts[file] = `src/${project}/build/libs/${file}`;
+      }
+    }
+  }
+
+  return contracts;
 };
 
 export class ProgressBar {
@@ -142,9 +165,13 @@ export class ProgressBar {
 }
 
 // Generates a unique container name for a given project path
-export const getContainerNameForProject = (projectPath: string, imageName: string, containerNamePrefix: string) => {
+export const getContainerNameForProject = (
+  projectPath: string,
+  imageName: string,
+  containerNamePrefix: string
+) => {
   const hash = crypto.createHash('sha256').update(projectPath).digest('hex');
   const projectName = path.basename(projectPath);
   const containerName = `${containerNamePrefix}-${projectName}-${hash}`;
   return containerName;
-}
+};

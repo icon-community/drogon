@@ -1,13 +1,21 @@
 // goloop ks
 import signale from 'signale';
-import { ensureCWDDrogonProject } from '../helpers';
-import { mountAndRunCommand } from '../helpers/docker';
+import {ensureCWDDrogonProject, getContainerNameForProject} from '../helpers';
+import {
+  mountAndRunCommand,
+  mountAndRunCommandInContainer,
+} from '../helpers/docker';
+import {DROGON_IMAGE} from '../constants';
 
-export const generateKeystore = async (projectPath: string, password: any, args: any) => {
+export const generateKeystore = async (
+  projectPath: string,
+  password: any,
+  args: any
+) => {
   // ensureCWDDrogonProject(projectPath);
 
   signale.pending('Generating Keystore...');
-  let command = `goloop ks gen --out /goloop/app/.keystore.json `
+  let command = `goloop ks gen --out ./.keystore.json `;
   if (password) {
     command += `--password ${password}`;
   }
@@ -35,4 +43,28 @@ export const goloop = async (projectPath: string, args: any) => {
       signale.success('Finished running goloop command');
     }
   });
+};
+
+export const runGoloopCmd = async (projectPath: any, command: any, cb: any) => {
+  const container = getContainerNameForProject(
+    projectPath,
+    DROGON_IMAGE,
+    'drogon'
+  );
+
+  await mountAndRunCommandInContainer(
+    container,
+    '/goloop/app',
+    [],
+    command,
+    (exitCode: any, output: string) => {
+      if (exitCode) {
+        console.log(output);
+        process.exit(exitCode);
+      } else {
+        cb(output);
+      }
+    },
+    false
+  );
 };
