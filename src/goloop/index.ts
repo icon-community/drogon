@@ -1,8 +1,11 @@
 // goloop ks
 import signale from 'signale';
 import {ensureCWDDrogonProject, getContainerNameForProject} from '../helpers';
-import {mountAndRunCommand, mountAndRunCommandInContainer} from '../helpers/docker';
-import { DROGON_IMAGE } from '../constants';
+import {
+  mountAndRunCommand,
+  mountAndRunCommandInContainer,
+} from '../helpers/docker';
+import {DROGON_IMAGE} from '../constants';
 
 export const generateKeystore = async (
   projectPath: string,
@@ -49,12 +52,19 @@ export const runGoloopCmd = async (projectPath: any, command: any, cb: any) => {
     'drogon'
   );
 
-  await mountAndRunCommandInContainer(container, "/goloop/app", [], command, (exitCode: any, output: string) => {
-    if (exitCode) {
-      console.log(output)
-      process.exit(exitCode);
-    } else {
-      cb(output)
-    }
-  }, false);
-}
+  await mountAndRunCommandInContainer(
+    container,
+    '/goloop/app',
+    [],
+    command,
+    (exitCode: any, output: string) => {
+      if (exitCode) {
+        console.log(output);
+        process.exit(exitCode);
+      } else {
+        cb(output);
+      }
+    },
+    false
+  );
+};

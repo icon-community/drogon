@@ -124,6 +124,10 @@ const main = async () => {
     .option('-c, --custom [node]', 'Deploy contracts to Custom node')
     .option('-d, --config [file]', 'Drogon config file.', 'drogon-config.json')
     .option('-k, --password [string]', 'Password for the keystore', 'gochain')
+    .option(
+      '-u, --uri [string]',
+      'URI of network for goloop command to interact with'
+    )
 
     .action(function (this: any) {
       const path = resolve(this.opts().path);
@@ -163,7 +167,11 @@ const main = async () => {
     .allowUnknownOption()
     .description('initialize the local network')
     .option('-p, --path [string]', 'Path of your Drogon Project', './')
-    .option('-k, --password [string]', 'Password for the keystore or for GOD Wallet', 'gochain')
+    .option(
+      '-k, --password [string]',
+      'Password for the keystore or for GOD Wallet',
+      'gochain'
+    )
     .action(function (this: any) {
       const path = resolve(this.opts().path);
       initSandbox(path, this.opts(), this.args);

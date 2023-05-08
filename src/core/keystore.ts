@@ -1,14 +1,14 @@
-import { panic } from '../helpers';
+import {panic} from '../helpers';
 import crypto from 'crypto';
-import { createHash } from 'crypto';
-import { scrypt } from 'ethereum-cryptography/scrypt';
-import { keccak256 } from 'ethereum-cryptography/keccak';
-import { bytesToHex } from 'ethereum-cryptography/utils';
-import { secp256k1 } from 'ethereum-cryptography/secp256k1';
-import { IsString, addHxPrefix, isPrivateKey } from '../crypto';
+import {createHash} from 'crypto';
+import {scrypt} from 'ethereum-cryptography/scrypt';
+import {keccak256} from 'ethereum-cryptography/keccak';
+import {bytesToHex} from 'ethereum-cryptography/utils';
+import {secp256k1} from 'ethereum-cryptography/secp256k1';
+import {IsString, addHxPrefix, isPrivateKey} from '../crypto';
 import * as https from 'https';
 import chalk from 'chalk';
-import { runGoloopCmd } from '../goloop';
+import {runGoloopCmd} from '../goloop';
 
 export interface KeyStore {
   version: 3;
@@ -65,12 +65,12 @@ export default class Wallet {
     this.address = addHxPrefix(address);
 
     this.url = `https://lisbon.tracker.solidwallet.io/v3/address/info?address=${this.address}`;
-    this.uri = network
-    this.projectPath = projectPath
+    this.uri = network;
+    this.projectPath = projectPath;
   }
 
   setURI(uri: string) {
-    this.uri = uri
+    this.uri = uri;
   }
 
   static async loadKeyStore(
@@ -105,14 +105,14 @@ export default class Wallet {
   }
 
   async getBalance(): Promise<BigInt> {
-    const command = `goloop rpc balance ${this.address} --uri ${this.uri}`
+    const command = `goloop rpc balance ${this.address} --uri ${this.uri}`;
 
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       runGoloopCmd(this.projectPath, command, (output: string) => {
-        let balance = output.replace(/[^\w\s]/gi, '')
+        let balance = output.replace(/[^\w\s]/gi, '');
         let balanceFloat = BigInt(balance);
         resolve(balanceFloat);
-      })
+      });
     });
   }
 
@@ -122,17 +122,19 @@ export default class Wallet {
   }
 
   async showBalances() {
-    await this.getBalance().then((balance) => {
+    await this.getBalance().then(balance => {
       this.display('Balance (ICX) :   ', balance);
-    })
+    });
   }
 
   display(prefix: string, number: BigInt) {
-    const divisor = 10**18;
-    const numberFormatted = (Number(number) / Number(divisor)).toLocaleString('en-US', { minimumFractionDigits: 4, maximumFractionDigits: 4 });
+    const divisor = 10 ** 18;
+    const numberFormatted = (Number(number) / Number(divisor)).toLocaleString(
+      'en-US',
+      {minimumFractionDigits: 4, maximumFractionDigits: 4}
+    );
     console.log(`${prefix} ${chalk.green(numberFormatted)}`);
   }
-
 }
 
 export const LoadKeystore = async (
@@ -148,10 +150,10 @@ export const LoadKeystore = async (
     typeof keystore === 'object'
       ? keystore
       : JSON.parse(
-        nonStrict
-          ? (keystore as unknown as string).toLowerCase()
-          : (keystore as string)
-      );
+          nonStrict
+            ? (keystore as unknown as string).toLowerCase()
+            : (keystore as string)
+        );
 
   if (json.version !== 3) {
     panic('This is not a V3 wallet.');

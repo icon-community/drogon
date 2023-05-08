@@ -25,14 +25,19 @@ export const deployContracts = async (
   if (!config) panic('Please run the command inside the Drogon Project');
 
   let destination = '';
-  let network = '';
+  let network = opts.uri;
+  if (network == undefined) {
+    panic(
+      'Missing --uri option. Example: yarn drogon deploy --local --uri http://localhost:9080/api/v3'
+    );
+  }
 
   if (opts.local) {
     destination = 'deployToLocal';
-    network = config.networks.local.uri;
   } else if (opts.lisbon) {
     destination = 'deployToLisbon';
-    network = config.networks.lisbon.uri;
+  } else if (opts.mainnet) {
+    destination = `deployTo${opts.custom}`;
   } else if (opts.custom) {
     destination = `deployTo${opts.custom}`;
   }
@@ -49,7 +54,13 @@ export const deployContracts = async (
   const keystore = importJson(`${projectPath}/` + keystoreFile);
   const password = opts.password;
 
-  const wallet = await Wallet.loadKeyStore(projectPath, network, keystore, password, false);
+  const wallet = await Wallet.loadKeyStore(
+    projectPath,
+    network,
+    keystore,
+    password,
+    false
+  );
   console.log(`Loaded wallet ${chalk.green(wallet.getAddress())}`);
 
   await wallet.showBalances();
@@ -69,11 +80,11 @@ export const deployContracts = async (
 
   let tasks: any = {};
 
-  for(var i=0; i<numProjects; i++) {
-    let project = keys[i]
-    
+  for (var i = 0; i < numProjects; i++) {
+    let project = keys[i];
+
     let command = `gradle src:${project}:${destination} -PkeystoreName=/goloop/app/${keystoreFile}`;
-    
+
     if (password) {
       command += ` -PkeystorePass=${password}`;
     }
@@ -109,17 +120,15 @@ export const deployContracts = async (
     if (numTasks == numProjects) {
       let totalCost = BigInt(0);
       for (var i in tasks) {
-        const cost = BigInt (tasks[i].initial - tasks[i].current)
-        if(!Number.isNaN(cost))
-        {
-          wallet.display(`Cost of deploying ${i} (ICX):     `, cost)
+        const cost = BigInt(tasks[i].initial - tasks[i].current);
+        if (!Number.isNaN(cost)) {
+          wallet.display(`Cost of deploying ${i} (ICX):     `, cost);
           totalCost = totalCost + cost;
         }
       }
 
-      if(totalCost!==0n)
-      {
-        wallet.display('Total cost of all deployments (ICX):    ', totalCost)
+      if (totalCost !== 0n) {
+        wallet.display('Total cost of all deployments (ICX):    ', totalCost);
       }
       clearInterval(id);
       wallet.showBalances();
