@@ -36,8 +36,10 @@ export const deployContracts = async (
     destination = 'deployToLocal';
   } else if (opts.lisbon) {
     destination = 'deployToLisbon';
+  } else if (opts.berlin) {
+    destination = 'deployToBerlin';
   } else if (opts.mainnet) {
-    destination = `deployTo${opts.custom}`;
+    destination = `deployToMain`;
   } else if (opts.custom) {
     destination = `deployTo${opts.custom}`;
   }
