@@ -171,11 +171,15 @@ export default class Wallet {
       if (kdfparams.prf !== 'hmac-sha256') {
         throw new Error("It's an unsupported parameters to PBKDF2.");
       }
-
+      let c : any
+      if (!keystore.crypto.kdfparams.c) {
+        throw new Error("Invalid PBKDF2 structure - 'c' parameter is missing");
+      }
+      c = kdfparams.c;
       derivedKey = crypto.pbkdf2Sync(
         Buffer.from(password),
         Buffer.from(kdfparams.salt, 'hex'),
-        kdfparams.c,
+        c,
         kdfparams.dklen,
         'sha256'
       );

@@ -97,7 +97,7 @@ export type KdfParams = {
     n: number;
     r: number;
     p: number;
-    c: number;
+    c?: number;
     prf?: string;
     salt: string;
 };
