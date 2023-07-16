@@ -102,7 +102,7 @@ export default class Wallet {
   }
 
   async getInfo(): Promise<any> {
-    const resp = await makeRequest(this.url);
+    const resp = await this.request(this.url);
     const walletInfo = JSON.parse(resp);
 
     if (walletInfo.result == '200') {
@@ -143,6 +143,25 @@ export default class Wallet {
       { minimumFractionDigits: 4, maximumFractionDigits: 4 }
     );
     console.log(`${prefix} ${chalk.green(numberFormatted)}`);
+  }
+  async  request(url: string): Promise<string> {
+    return new Promise<string>((resolve, reject) => {
+      https
+        .get(url, res => {
+          let data = '';
+  
+          res.on('data', chunk => {
+            data += chunk;
+          });
+  
+          res.on('end', () => {
+            resolve(data);
+          });
+        })
+        .on('error', error => {
+          reject(error);
+        });
+    });
   }
 
   static async validateKeyStore(keystore: KeyStore, password: string): Promise<Buffer> {
@@ -207,23 +226,3 @@ export default class Wallet {
   }
 }
 
-
-async function makeRequest(url: string): Promise<string> {
-  return new Promise<string>((resolve, reject) => {
-    https
-      .get(url, res => {
-        let data = '';
-
-        res.on('data', chunk => {
-          data += chunk;
-        });
-
-        res.on('end', () => {
-          resolve(data);
-        });
-      })
-      .on('error', error => {
-        reject(error);
-      });
-  });
-}
