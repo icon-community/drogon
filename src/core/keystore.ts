@@ -1,39 +1,16 @@
-import {panic} from '../helpers';
+import { panic } from '../helpers';
 import crypto from 'crypto';
-import {createHash} from 'crypto';
-import {scrypt} from 'ethereum-cryptography/scrypt';
-import {keccak256} from 'ethereum-cryptography/keccak';
-import {bytesToHex} from 'ethereum-cryptography/utils';
-import {secp256k1} from 'ethereum-cryptography/secp256k1';
-import {IsString, addHxPrefix, isPrivateKey} from '../crypto';
+import { createHash } from 'crypto';
+import { scrypt } from 'ethereum-cryptography/scrypt';
+import { keccak256 } from 'ethereum-cryptography/keccak';
+import { bytesToHex } from 'ethereum-cryptography/utils';
+import { secp256k1 } from 'ethereum-cryptography/secp256k1';
+import { IsString, addHxPrefix, isPrivateKey } from '../crypto';
 import * as https from 'https';
 import chalk from 'chalk';
-import {runGoloopCmd} from '../goloop';
+import { runGoloopCmd } from '../goloop';
+import { KeyStore } from '../types';
 
-export interface KeyStore {
-  version: 3;
-  id: string;
-  address: string;
-  crypto: {
-    ciphertext: string;
-    cipherparams: {
-      iv: string;
-    };
-    cipher: string;
-    kdf: any;
-    kdfparams: {
-      dklen: number;
-      salt: string;
-      prf: string;
-      n: number;
-      r: number;
-      p: number;
-      c: number;
-    };
-    mac: string;
-  };
-  coinType: 'icx';
-}
 
 export default class Wallet {
   private _privKey: any;
@@ -46,13 +23,13 @@ export default class Wallet {
 
   private projectPath: string;
 
-  constructor(projectPath: string, privKey: typeof Buffer, network: string) {
+  constructor(projectPath: string, privKey: Buffer, network: string) {
     if (!privKey) {
-      panic('A private key must be supplied to the constructor.');
+      throw new Error('A private key must be supplied to the constructor.');
     }
 
     if (privKey && !isPrivateKey(privKey)) {
-      panic(`[${privKey}] is not a valid private key.`);
+      throw new Error(`[${privKey}] is not a valid private key.`);
     }
 
     this._privKey = privKey;
@@ -73,16 +50,48 @@ export default class Wallet {
     this.uri = uri;
   }
 
+  // static function to load keystore string json and return the valid typed keystore
+  static keyStoreFromString(keystoreString: string): KeyStore {
+    let data: any;
+
+    try {
+      data = JSON.parse(keystoreString);
+    } catch (e) {
+      throw new Error("Invalid JSON string");
+    }
+
+    // Validate the structure of the KeyStore
+    if (!data.address || !data.id || !data.version || !data.coinType || !data.crypto) {
+      throw new Error("Invalid KeyStore structure");
+    }
+    if (data.coinType !== 'icx') {
+      throw new Error("Invalid CoinType");
+    }
+
+    if (!data.crypto.cipher || !data.crypto.cipherparams || !data.crypto.ciphertext ||
+      !data.crypto.kdf || !data.crypto.kdfparams || !data.crypto.mac) {
+      throw new Error("Invalid Crypto structure");
+    }
+
+    if (!data.crypto.cipherparams.iv ||
+      !data.crypto.kdfparams.dklen || !data.crypto.kdfparams.n ||
+      !data.crypto.kdfparams.r || !data.crypto.kdfparams.p ||
+      !data.crypto.kdfparams.salt) {
+      throw new Error("Invalid Crypto Params structure");
+    }
+    const keyStore: KeyStore = data as KeyStore;
+    return keyStore;
+  }
+
   static async loadKeyStore(
     projectPath: string,
     network: string,
-    keystore: KeyStore | string,
-    password: string,
-    nonStrict: boolean
+    keystore: KeyStore,
+    password: string
   ): Promise<Wallet> {
-    const seed = await LoadKeystore(keystore, password, nonStrict);
+    const seed = await Wallet.validateKeyStore(keystore, password);
 
-    return new Wallet(projectPath, seed as any, network);
+    return new Wallet(projectPath, seed, network);
   }
 
   /*
@@ -131,82 +140,69 @@ export default class Wallet {
     const divisor = 10 ** 18;
     const numberFormatted = (Number(number) / Number(divisor)).toLocaleString(
       'en-US',
-      {minimumFractionDigits: 4, maximumFractionDigits: 4}
+      { minimumFractionDigits: 4, maximumFractionDigits: 4 }
     );
     console.log(`${prefix} ${chalk.green(numberFormatted)}`);
   }
-}
 
-export const LoadKeystore = async (
-  keystore: KeyStore | string,
-  password: string,
-  nonStrict: boolean
-): Promise<any> => {
-  if (!IsString(password)) {
-    panic('Password is invalid.');
-  }
-
-  const json: KeyStore =
-    typeof keystore === 'object'
-      ? keystore
-      : JSON.parse(
-          nonStrict
-            ? (keystore as unknown as string).toLowerCase()
-            : (keystore as string)
-        );
-
-  if (json.version !== 3) {
-    panic('This is not a V3 wallet.');
-  }
-
-  let derivedKey: any;
-  let kdfparams: KeyStore['crypto']['kdfparams'];
-
-  if (json.crypto.kdf === 'scrypt') {
-    kdfparams = json.crypto.kdfparams;
-    derivedKey = await scrypt(
-      Buffer.from(password) as any,
-      Buffer.from(kdfparams.salt, 'hex') as any,
-      kdfparams.n,
-      kdfparams.p,
-      kdfparams.r,
-      kdfparams.dklen
-    );
-  } else if (json.crypto.kdf === 'pbkdf2') {
-    kdfparams = json.crypto.kdfparams;
-
-    if (kdfparams.prf !== 'hmac-sha256') {
-      panic("It's an unsupported parameters to PBKDF2.");
+  static async validateKeyStore(keystore: KeyStore, password: string): Promise<Buffer> {
+    if (!IsString(password)) {
+      throw new Error('Password is invalid.');
     }
 
-    derivedKey = crypto.pbkdf2Sync(
-      Buffer.from(password),
-      Buffer.from(kdfparams.salt, 'hex'),
-      kdfparams.c,
-      kdfparams.dklen,
-      'sha256'
+    if (keystore.version !== 3) {
+      throw new Error('This is not a V3 wallet.');
+    }
+
+    let derivedKey: any;
+    if (keystore.crypto.kdf === 'scrypt') {
+      let kdfparams = keystore.crypto.kdfparams;
+      derivedKey = await scrypt(
+        Buffer.from(password) as any,
+        Buffer.from(kdfparams.salt, 'hex') as any,
+        kdfparams.n,
+        kdfparams.p,
+        kdfparams.r,
+        kdfparams.dklen
+      );
+    } else if (keystore.crypto.kdf === 'pbkdf2') {
+      let kdfparams = keystore.crypto.kdfparams;
+
+      if (kdfparams.prf !== 'hmac-sha256') {
+        throw new Error("It's an unsupported parameters to PBKDF2.");
+      }
+
+      derivedKey = crypto.pbkdf2Sync(
+        Buffer.from(password),
+        Buffer.from(kdfparams.salt, 'hex'),
+        kdfparams.c,
+        kdfparams.dklen,
+        'sha256'
+      );
+    } else {
+      throw new Error("It's an unsupported key derivation scheme.");
+    }
+
+    const ciphertext = Buffer.from(keystore.crypto.ciphertext, 'hex');
+    const mac = keccak256(Buffer.concat([derivedKey.slice(16, 32), ciphertext]));
+
+    if (bytesToHex(mac) !== keystore.crypto.mac) {
+      panic('Key derivation is failed (possibly wrong passphrase).');
+    }
+
+    const decipher = crypto.createDecipheriv(
+      keystore.crypto.cipher,
+      derivedKey.slice(0, 16),
+      Buffer.from(keystore.crypto.cipherparams.iv, 'hex')
     );
-  } else {
-    panic("It's an unsupported key derivation scheme.");
+
+    const seed = Buffer.concat([decipher.update(ciphertext), decipher.final()]);
+
+    return seed;
+
   }
+}
 
-  const ciphertext = Buffer.from(json.crypto.ciphertext, 'hex');
-  const mac = keccak256(Buffer.concat([derivedKey.slice(16, 32), ciphertext]));
-
-  if (bytesToHex(mac) !== json.crypto.mac) {
-    panic('Key derivation is failed (possibly wrong passphrase).');
-  }
-
-  const decipher = crypto.createDecipheriv(
-    json.crypto.cipher,
-    derivedKey.slice(0, 16),
-    Buffer.from(json.crypto.cipherparams.iv, 'hex')
-  );
-
-  const seed = Buffer.concat([decipher.update(ciphertext), decipher.final()]);
-
-  return seed;
-};
 
 async function makeRequest(url: string): Promise<string> {
   return new Promise<string>((resolve, reject) => {

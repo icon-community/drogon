@@ -53,15 +53,18 @@ export const deployContracts = async (
     );
   }
 
-  const keystore = importJson(`${projectPath}/` + keystoreFile);
+  const keystoreString = importJson(`${projectPath}/` + keystoreFile);
+  
+  //parses the string into the object
+  const keystore = Wallet.keyStoreFromString(keystoreString);
+
   const password = opts.password;
 
   const wallet = await Wallet.loadKeyStore(
     projectPath,
     network,
     keystore,
-    password,
-    false
+    password
   );
   console.log(`Loaded wallet ${chalk.green(wallet.getAddress())}`);
 

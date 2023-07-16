@@ -129,7 +129,8 @@ const createConfigFile = (
   password: string
 ) => {
   const keystore = importJson(`${projectPath}/` + keystoreFile);
-  Wallet.loadKeyStore(projectPath, '', keystore, password, false).then(
+
+  Wallet.loadKeyStore(projectPath, '', keystore, password).then(
     wallet => {
       let address = wallet.getAddress();
       let iconConfig: any = JSON.parse(ICON_CONFIG);
