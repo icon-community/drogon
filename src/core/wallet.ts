@@ -46,11 +46,14 @@ export default class Wallet {
       this.projectPath = projectPath;
     }
   
+    static create(projectPath: string,  network: string): Wallet {
+        let privKey: Buffer = Buffer.from(secp256k1.utils.randomPrivateKey())
+        return new Wallet(projectPath, privKey, network);
+    }
+
     setURI(uri: string) {
       this.uri = uri;
     }
-  
-   
   
     /*
      * Get EOA address of wallet instance.
