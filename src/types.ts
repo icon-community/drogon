@@ -14,7 +14,7 @@ export type IconConfig = {
     rpc_dump: boolean;
     log_level: string;
     seed_addr: string;
-    genesis: Genesis;
+    genesis: GenesisConfig;
     chain_dir: string;
     ws_max_session: number;
     key_store: KeyStore;
@@ -23,7 +23,7 @@ export type IconConfig = {
     console_level: string;
 };
 
-export type Genesis = {
+export type GenesisConfig = {
     accounts: Account[];
     chain: Chain;
     message: string;
@@ -32,15 +32,17 @@ export type Genesis = {
 
 export type Account = {
     address: string;
-    balance: string;
     name: string;
+    balance?: string;
+    score?: any;
 };
 
 export type Chain = {
     validatorList: string[];
     revision: string;
-    auditEnabled: string;
-    deployerWhiteListEnabled: string;
+    auditEnabled?: string;
+    deployerWhiteListEnabled?: string;
+    blockInterval?: string;
     fee: Fee;
 };
 
@@ -56,19 +58,25 @@ export type StepLimit = {
 };
 
 export type StepCosts = {
-    default: string;
-    contractCall: string;
-    contractCreate: string;
-    contractUpdate: string;
-    contractDestruct: string;
-    contractSet: string;
-    get: string;
-    set: string;
-    replace: string;
-    delete: string;
-    input: string;
-    eventLog: string;
-    apiCall: string;
+    default?: string;
+    contractCall?: string;
+    contractCreate?: string;
+    contractUpdate?: string;
+    contractDestruct?: string;
+    contractSet?: string;
+    get?: string;
+    set?: string;
+    replace?: string;
+    delete?: string;
+    input?: string;
+    eventLog?: string;
+    apiCall?: string;
+    deleteBase?: string;
+    getBase?: string;
+    log?: string;
+    logBase?: string;
+    schema?: string;
+    setBase?: string;
 };
 
 export type KeyStore = {
@@ -108,3 +116,10 @@ export type Consensus = {
     extraMainPRepCount: number;
     subPRepCount: number;
 };
+
+export interface IGenesis {
+    accounts: Account[];
+    chain: Chain;
+    message: string;
+    nid: string;
+}
