@@ -100,4 +100,14 @@ export class Genesis implements IGenesis {
 
         return treasuryWallet;
     }
+    getGovernanceWallet(): Account {
+
+        const governanceWallet = this.accounts.find(acc => acc.name === 'governance');
+
+        if (!governanceWallet) {
+            throw new Error('Governance wallet not found');
+        }
+
+        return governanceWallet;
+    }
 }
