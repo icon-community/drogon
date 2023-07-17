@@ -5,6 +5,8 @@ import { keccak256 } from 'ethereum-cryptography/keccak';
 import { bytesToHex } from 'ethereum-cryptography/utils';
 import { IsString } from '../crypto';
 import { KeyStore } from '../types';
+import { runGoloopCmd } from '../goloop';
+import * as fs from 'fs';
 
 export function keyStoreFromString(keystoreString: string): KeyStore {
   let data: any;
@@ -110,3 +112,31 @@ export async function decipherKeyStore(keystore: KeyStore, password: string) {
   return seed;
 }
 
+export function keyStoreFileNameForIndex(index: number): string {
+  return `keystore${index}.json`;
+}
+export async function generateKeyStore (projectPath: string, keystoreIndex: number): Promise<string>  {
+  const command = `goloop ks gen --out /goloop/app/.drogon/sandbox/${keyStoreFileNameForIndex(keystoreIndex)}`;
+  return new Promise((resolve, reject) => {
+    runGoloopCmd(projectPath, command, (output: any, error: any) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(`.drogon/sandbox/${keyStoreFileNameForIndex(keystoreIndex)}}`);
+      }
+    });
+  });
+}
+
+export async function copyKeyStore(projectPath: string, keystoreIndex: number): Promise<void> {
+  return new Promise((resolve, reject) => {
+    fs.copyFile(
+      `${projectPath}/.keystore.json`,
+      `${projectPath}/.drogon/sandbox/${keyStoreFileNameForIndex(keystoreIndex)}`,
+      err => {
+        if (err) reject(err);
+        else resolve();
+      }
+    );
+  });
+}
