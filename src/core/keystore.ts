@@ -113,16 +113,16 @@ export async function decipherKeyStore(keystore: KeyStore, password: string) {
 }
 
 export function keyStoreFileNameForIndex(index: number): string {
-  return `keystore${index}.json`;
+  return `.drogon/sandbox/keystore${index}.json`;
 }
 export async function generateKeyStore (projectPath: string, keystoreIndex: number): Promise<string>  {
-  const command = `goloop ks gen --out /goloop/app/.drogon/sandbox/${keyStoreFileNameForIndex(keystoreIndex)}`;
+  const command = `goloop ks gen --out /goloop/app/${keyStoreFileNameForIndex(keystoreIndex)}`;
   return new Promise((resolve, reject) => {
     runGoloopCmd(projectPath, command, (output: any, error: any) => {
       if (error) {
         reject(error);
       } else {
-        resolve(`.drogon/sandbox/${keyStoreFileNameForIndex(keystoreIndex)}}`);
+        resolve(keyStoreFileNameForIndex(keystoreIndex));
       }
     });
   });
@@ -132,7 +132,7 @@ export async function copyKeyStore(projectPath: string, keystoreIndex: number): 
   return new Promise((resolve, reject) => {
     fs.copyFile(
       `${projectPath}/.keystore.json`,
-      `${projectPath}/.drogon/sandbox/${keyStoreFileNameForIndex(keystoreIndex)}`,
+      `${projectPath}/${keyStoreFileNameForIndex(keystoreIndex)}`,
       err => {
         if (err) reject(err);
         else resolve();

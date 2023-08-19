@@ -102,3 +102,13 @@ Drogon offers:
 - [Chai](https://twitter.com/ant4g0nist)
 - [r3dsm0k3](https://twitter.com/r3dsm0k3)
 - [FOMOmental](https://twitter.com/FOMOmental)
+
+
+
+Create a sub command - drogon sandbox start --nodes 10
+    * start the docker containers with node-n names
+    * drogon main container should be able to contact these containers from within (same network)
+    * generate keystores for different nodes 
+    * in the config - (createConfigFile) - validatorlist needs to have the addresses of all the nodes
+    * mainPRepCount in the config needs to be eq to the number of nodes
+    * remove todos

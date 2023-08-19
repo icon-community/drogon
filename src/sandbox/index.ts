@@ -15,8 +15,10 @@ import {
   mountAndRunCommandInContainer,
 } from '../helpers/docker';
 import { runGoloopCmd } from '../goloop';
-import { decipherKeyStore, keyStoreFromString } from '../core/keystore';
+import { decipherKeyStore, keyStoreFromString,generateKeyStore,copyKeyStore, keyStoreFileNameForIndex } from '../core/keystore';
 import Wallet from '../core/wallet';
+import { IconConfig } from '../types';
+import { Genesis } from '../core/genesis';
 
 const sandbox_folder = '.drogon/sandbox';
 
@@ -31,7 +33,7 @@ const fetchProject = async (source: string, destination: string) => {
     [
       'sh',
       '-c',
-      `git clone ${url} && mv /home/${repoName}/data/single /goloop/app/ && mv /home/${repoName}/data/governance /goloop/app/single/gov`,
+      `git clone ${url} && mv /home/${repoName}/data/single /goloop/app/ && mv /home/${repoName}/data/governance /goloop/app/single/gov`, //TODO: change this to a better way
     ],
     [process.stdout, process.stderr],
     {
@@ -123,23 +125,51 @@ export const scaffoldSandboxData = async (
 
 const createConfigFile = async (
   projectPath: string,
-  keystoreFile: any,
-  password: string
-) => {
+  password: string,
+  nodeIndex: number
+): Promise<string> => {
 
-  const keystoreStr = importJson(`${projectPath}/` + keystoreFile);
-
+  const keystoreStr = importJson(`${projectPath}/` + keyStoreFileNameForIndex(nodeIndex));
   const keystore = keyStoreFromString(keystoreStr);
-
-  const privKey = await decipherKeyStore(keystore, password)
-
-  const wallet = new Wallet(projectPath, privKey, '');
+  const privKey = await decipherKeyStore(keystore, password);
+  const wallet = new Wallet(projectPath, privKey, ''); //TODO: fixme
   let address = wallet.getAddress();
-  let iconConfig: any = JSON.parse(ICON_CONFIG);
-  iconConfig['key_store'] = keystore;
-  iconConfig['key_password'] = password;
-  iconConfig['genesis']['accounts'][0]['address'] = address;
-  iconConfig['genesis']['chain']['validatorList'] = [address];
+
+  let iconConfig: IconConfig = JSON.parse(ICON_CONFIG);
+  iconConfig.key_store = keystore;
+  iconConfig.key_password = password;
+  iconConfig.genesis.accounts[nodeIndex].address = address;
+
+  return address;
+};
+
+
+const setupIconConfig = async (projectPath: string, password: string, numNodes: number) => {
+  
+  const config = importJson(`${projectPath}/drogon-config.json`);
+
+  if (!config) panic('Please run the command inside the Drogon Project');
+
+  let addresses: string[] = [];
+  
+  for (let i = 0; i < numNodes; i++) {
+    let keystoreFile = keyStoreFileNameForIndex(i);
+
+    if (!checkIfFileExists(`${projectPath}/` + keystoreFile)) {
+      keystoreFile = await generateKeyStore(projectPath, i);
+    } else {
+      await copyKeyStore(projectPath, i);
+    }
+
+    const address = await createConfigFile(projectPath, password, i);
+    addresses.push(address);
+  }
+
+  // After all addresses are generated, assign them to the validator list
+  let iconConfig: IconConfig = JSON.parse(ICON_CONFIG);
+  let genesis = Genesis.default();
+  iconConfig.genesis = genesis;
+  iconConfig.genesis.chain.validatorList = addresses;
 
   fs.writeFile(
     `${projectPath}/.drogon/sandbox/config.json`,
@@ -149,75 +179,31 @@ const createConfigFile = async (
       if (err) panic(err.message);
     }
   );
-  
 };
 
-const setupIconConfig = async (projectPath: string, password: string) => {
-  // read the drogon config file
-  const config = importJson(`${projectPath}/drogon-config.json`);
-
-  if (!config) panic('Please run the command inside the Drogon Project');
-
-  let address = '';
-  // get configured keystore from config
-  let keystoreFile = config.keystore;
-
-  if (!checkIfFileExists(`${projectPath}/` + keystoreFile)) {
-    // await generateKeystore(`${projectPath}/.drogon/sandbox`, "gochain", [])
-    const command =
-      'goloop ks gen --out /goloop/app/.drogon/sandbox/keystore.json';
-    await runGoloopCmd(`${projectPath}`, command, (output: any) => {
-      keystoreFile = `.drogon/sandbox/keystore.json`;
-      createConfigFile(projectPath, keystoreFile, password);
-    });
-  } else {
-    fs.copyFile(
-      `${projectPath}/.keystore.json`,
-      `${projectPath}/.drogon/sandbox/keystore.json`,
-      err => {
-        if (err) throw err;
-      }
-    );
-    createConfigFile(projectPath, keystoreFile, password);
-  }
-};
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export const initSandbox = (projectPath: string, opts: any, args: any) => {
-  // TODO:
-  // - add config initializations
-  // - god wallet configuration
-  // - genesis
+export const initSandbox = async (projectPath: string, opts: any, args: any) => {
 
   ensureCWDDrogonProject(projectPath);
 
   fs.mkdirSync(`${projectPath}/.drogon/sandbox`, { recursive: true });
 
   // setup ICON config
-  setupIconConfig(projectPath, opts.password)
-    .then(() => { })
-    .catch(e => {
-      console.log(e);
-      panic('failed to init sandbox');
-    });
+  try {
+    await setupIconConfig(projectPath, opts.password, 10) //TODO: change this to a better way
+    await scaffoldSandboxData('data/multi',projectPath, ICON_SANDBOX_DATA_REPO, `${projectPath}/.drogon/sandbox`)
+    console.log('Sandbox initialised');
+  } catch (error) {
+    console.log(error);
+    panic('failed to init sandbox');
+  }
 
-  scaffoldSandboxData(
-    'data/single',
-    projectPath,
-    ICON_SANDBOX_DATA_REPO,
-    `${projectPath}/.drogon/sandbox`
-  )
-    .then(() => {
-      console.log('Sandbox initialised');
-    })
-    .catch(error => {
-      console.log(error);
-    });
 };
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const startSandbox = (projectPath: string, args: any) => {
-  console.log(`${projectPath}./${sandbox_folder}/single`);
+  console.log(`${projectPath}./${sandbox_folder}/multi`);
   ensureCWDDrogonProject(projectPath);
 
   const container = getContainerNameForProject(

@@ -14,7 +14,7 @@ export type IconConfig = {
     rpc_dump: boolean;
     log_level: string;
     seed_addr: string;
-    genesis: GenesisConfig;
+    genesis: IGenesis;
     chain_dir: string;
     ws_max_session: number;
     key_store: KeyStore;

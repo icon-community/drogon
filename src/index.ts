@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
-import {resolve} from 'path';
+import {parse, resolve} from 'path';
 import {exit} from 'process';
 import {banner} from './helpers';
-import {program} from 'commander';
+import {program, InvalidArgumentError} from 'commander';
 import {LIB_VERSION} from './version';
 import {
   install,
@@ -21,6 +21,16 @@ import {localDrogonImageId} from './helpers/docker';
 import {DROGON_IMAGE} from './constants';
 import {startTheGradleDaemon, stopTheGradleDaemon} from './gradle';
 
+const numNodes = (value:any, dummyPrevious:any) => {
+  const parsedValue = parseInt(value, 10);
+  if (isNaN(parsedValue)) {
+    throw new InvalidArgumentError('Not a number.');
+  }
+  if (parsedValue > 10) {
+    throw new InvalidArgumentError('Too many nodes. Max 10.');
+  }
+  return parsedValue;
+}
 const main = async () => {
   banner();
 
@@ -184,6 +194,7 @@ const main = async () => {
     .allowUnknownOption()
     .description('start the local network')
     .option('-p, --path [string]', 'Path of your Drogon Project', './')
+    .option('-n, --nodes [number]', 'Number of nodes to start', numNodes, 1)
     .action(function (this: any) {
       const path = resolve(this.opts().path);
       startSandbox(path, this.args);

@@ -17,6 +17,7 @@ export const ICON_ICONENV = [
   'ICON_CONFIG=/goloop/data/icon_config.json',
 ];
 
+
 export const ICON_CONFIG = `{
   "nid": 3,
   "channel": "default",
@@ -34,48 +35,6 @@ export const ICON_CONFIG = `{
   "log_level": "trace",
   "seed_addr": "",
   "genesis": {
-    "accounts": [
-      {
-        "address": "hx3088becaac5c71603bb9cded93af841ffbddde04",
-        "balance": "0x2961fff8ca4a62327800000",
-        "name": "god"
-      },
-      {
-        "address": "hx1000000000000000000000000000000000000000",
-        "balance": "0x0",
-        "name": "treasury"
-      }
-    ],
-    "chain": {
-      "validatorList": [
-        "hx3088becaac5c71603bb9cded93af841ffbddde04"
-      ],
-      "revision": "0x8",
-      "auditEnabled": "0x0",
-      "deployerWhiteListEnabled": "0x0",
-      "fee": {
-        "stepPrice": "0x0",
-        "stepLimit": {
-          "invoke": "0x10000000",
-          "query": "0x1000000"
-        },
-        "stepCosts": {
-          "default": "0x1",
-          "contractCall": "0x1",
-          "contractCreate": "0x1",
-          "contractUpdate": "0x1",
-          "contractDestruct": "0x1",
-          "contractSet": "0x1",
-          "get": "0x0",
-          "set": "0x1",
-          "replace": "0x1",
-          "delete": "-0x1",
-          "input": "0x1",
-          "eventLog": "0x1",
-          "apiCall": "0x1"
-        }
-      }
-    },
     "message": "gochain generated genesis",
     "nid":"0x3"
   },

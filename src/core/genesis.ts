@@ -70,7 +70,7 @@ export class Genesis implements IGenesis {
                 },
                 validatorList: []
             },
-            message: "genesis for local gochain nodes",
+            message: "drogon gochain generated genesis",
             nid: "0x3",
         });
     }
