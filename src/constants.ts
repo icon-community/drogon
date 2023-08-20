@@ -19,57 +19,108 @@ export const ICON_ICONENV = [
 
 
 export const ICON_CONFIG = `{
-  "nid": 3,
+  "nid": 51,
   "channel": "default",
   "concurrency_level": 1,
   "db_type": "goleveldb",
   "ee_instances": 1,
   "ee_socket": "",
   "engines": "java",
-  "p2p": "127.0.0.1:8080",
+  "p2p": "127.0.0.1:8081",
   "p2p_listen": "",
   "role": 1,
-  "rpc_addr": ":9082",
+  "rpc_addr": ":9083",
   "rpc_debug": true,
   "rpc_dump": false,
   "log_level": "trace",
   "seed_addr": "",
   "genesis": {
+    "accounts": [
+      {
+        "address": "hx3088becaac5c71603bb9cded93af841ffbddde04",
+        "balance": "0x2961fff8ca4a62327800000",
+        "name": "god"
+      },
+      {
+        "address": "hx1000000000000000000000000000000000000000",
+        "balance": "0x0",
+        "name": "treasury"
+      },
+      {
+        "address": "cx0000000000000000000000000000000000000001",
+        "name": "governance",
+        "score": {
+          "contentId": "hash:{{hash:gov/governance-2.1.3-optimized.jar}}",
+          "contentType": "application/java",
+          "owner": "hx3088becaac5c71603bb9cded93af841ffbddde04"
+        }
+      }
+    ],
+    "chain": {
+      "validatorList": [
+        "hx3088becaac5c71603bb9cded93af841ffbddde04",
+      ],
+      "revision": "0x8",
+      "auditEnabled": "0x0",
+      "blockInterval": "0x3e8",
+      "deployerWhiteListEnabled": "0x0",
+      "fee": {
+        "stepPrice": "0x0",
+        "stepLimit": {
+          "invoke": "0x10000000",
+          "query": "0x1000000"
+        },
+        "stepCosts": {
+          "default": "0x1",
+          "contractCall": "0x1",
+          "contractCreate": "0x1",
+          "contractUpdate": "0x1",
+          "contractDestruct": "0x1",
+          "contractSet": "0x1",
+          "get": "0x0",
+          "set": "0x1",
+          "replace": "0x1",
+          "delete": "-0x1",
+          "input": "0x1",
+          "eventLog": "0x1",
+          "apiCall": "0x1"
+        }
+      }
+    },
     "message": "gochain generated genesis",
-    "nid":"0x3"
+    "nid":"0x33"
   },
   "chain_dir": "",
   "ws_max_session": 10,
   "key_store": {
-    "address": "hx3088becaac5c71603bb9cded93af841ffbddde04",
-    "id": "69589581-0573-4758-93e2-c46cf01de067",
-    "version": 3,
-    "coinType": "icx",
-    "crypto": {
-      "cipher": "aes-128-ctr",
-      "cipherparams": {
-        "iv": "198e71cedcc5a008f4605e636939a970"
-      },
-      "ciphertext": "800da34e391e2771881aaa9b041f519c2c3a0479304946d053e0e0bfd1478253",
-      "kdf": "scrypt",
-      "kdfparams": {
-        "dklen": 32,
-        "n": 65536,
-        "r": 8,
-        "p": 1,
-        "salt": "f4287ebe3af7e4eb"
-      },
-      "mac": "b012ab8ef387d4ef68b165da047da39cbcd73fe3d50eef4a16dadb7301bf79f2"
-    }
+      "address": "hxe88916f6f1dd1e131ed2799a0f8a559a2491b794",
+      "id": "951928c3-8ff5-4c08-9ebd-6f58eecb0151",
+      "version": 3,
+      "coinType": "icx",
+      "crypto": {
+          "cipher": "aes-128-ctr",
+          "cipherparams": {
+              "iv": "54f0f52c185d5353984ce67645b2bdae"
+          },
+          "ciphertext": "a3acf82d9360802499f109b2a80770ceae90de324cb133526a7b07ffe03328f8",
+          "kdf": "scrypt",
+          "kdfparams": {
+              "dklen": 32,
+              "n": 65536,
+              "r": 8,
+              "p": 1,
+              "salt": "e96dd11293c0f0b1"
+          },
+          "mac": "89643f44d180488666ff9c4b0e26e31dd814297191873e1a04325dfb39fcdd58"
+      }
   },
   "consensus":{
-    "termPeriod": 300,
-    "mainPRepCount": 1,
-    "extraMainPRepCount": 0,
-    "subPRepCount": 4
+      "termPeriod": 300,
+      "mainPRepCount": 1,
+      "extraMainPRepCount": 0,
+      "subPRepCount": 4
   },
   
   "key_password": "gochain",
   "console_level": "trace"
-}
-  `;
+}`;

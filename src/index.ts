@@ -179,6 +179,7 @@ const main = async () => {
     .allowUnknownOption()
     .description('initialize the local network')
     .option('-p, --path [string]', 'Path of your Drogon Project', './')
+    .option('-n, --nodes [number]', 'Number of nodes to start', numNodes, 1)
     .option(
       '-k, --password [string]',
       'Password for the keystore or for GOD Wallet',
@@ -197,7 +198,7 @@ const main = async () => {
     .option('-n, --nodes [number]', 'Number of nodes to start', numNodes, 1)
     .action(function (this: any) {
       const path = resolve(this.opts().path);
-      startSandbox(path, this.args);
+      startSandbox(path, this.opts().nodes, this.args);
     });
 
   sandbox

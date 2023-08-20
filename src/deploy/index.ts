@@ -10,8 +10,9 @@ import {
 } from '../helpers';
 import {mountAndRunCommandInContainer} from '../helpers/docker';
 import {DROGON_IMAGE} from '../constants';
-import Wallet from '../core/keystore';
+import Wallet from '../core/wallet';
 import chalk from 'chalk';
+import { keyStoreFromString } from '../core/keystore';
 
 export const deployContracts = async (
   projectPath: string,
@@ -56,16 +57,18 @@ export const deployContracts = async (
   const keystoreString = importJson(`${projectPath}/` + keystoreFile);
   
   //parses the string into the object
-  const keystore = Wallet.keyStoreFromString(keystoreString);
+  console.log(keystoreString)
+  // const keystore = keyStoreFromString(keystoreString);
 
   const password = opts.password;
 
   const wallet = await Wallet.loadKeyStore(
     projectPath,
     network,
-    keystore,
+    keystoreString,
     password
   );
+  
   console.log(`Loaded wallet ${chalk.green(wallet.getAddress())}`);
 
   await wallet.showBalances();

@@ -59,14 +59,16 @@ const fetchProject = async (
     ],
     [process.stdout, process.stderr],
     {
-      AutoRemove: true,
-      Binds: [`${destination}:/goloop/app`],
       AttachStdout: true,
       AttachStderr: true,
       WorkingDir: '/home',
+      HostConfig:{
+        AutoRemove: true,
+        Binds: [`${destination}:/goloop/app`],
+      }
     },
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    (err: any, data: any, container: any) => {
+    (err: any, result) => {
       if (err) panic(`Failed to fetch boilerplate. ${err}`);
     }
   );

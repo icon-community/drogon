@@ -38,6 +38,10 @@ WORKDIR /root/
 ENV GRADLE_HOME /usr/local/gradle
 ENV PATH ${PATH}:${GRADLE_HOME}/bin
 
+COPY dockerfiles/governance-2.1.3-optimized.jar /goloop/
+COPY dockerfiles/run.sh /home/
+RUN chmod +x /home/run.sh
+
 WORKDIR /goloop/app/
 
 CMD ["tail", "-f", "/dev/null"]

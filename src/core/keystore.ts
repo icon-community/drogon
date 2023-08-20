@@ -115,6 +115,7 @@ export async function decipherKeyStore(keystore: KeyStore, password: string) {
 export function keyStoreFileNameForIndex(index: number): string {
   return `.drogon/sandbox/keystore${index}.json`;
 }
+
 export async function generateKeyStore (projectPath: string, keystoreIndex: number): Promise<string>  {
   const command = `goloop ks gen --out /goloop/app/${keyStoreFileNameForIndex(keystoreIndex)}`;
   return new Promise((resolve, reject) => {

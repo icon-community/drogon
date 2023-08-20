@@ -11,6 +11,7 @@ import * as https from 'https';
 import chalk from 'chalk';
 import { runGoloopCmd } from '../goloop';
 import { KeyStore } from '../types';
+import { decipherKeyStore } from './keystore';
 
 export default class Wallet {
     private _privKey: Buffer;
@@ -54,7 +55,18 @@ export default class Wallet {
     setURI(uri: string) {
       this.uri = uri;
     }
+    
+    static async loadKeyStore(
+      projectPath: string,
+      network: string,
+      keystore: KeyStore,
+      password: string,
+    ): Promise<Wallet> {
+      const seed = await decipherKeyStore(keystore, password);
   
+      return new Wallet(projectPath, seed as any, network);
+    }
+
     /*
      * Get EOA address of wallet instance.
      */
@@ -105,6 +117,7 @@ export default class Wallet {
       );
       console.log(`${prefix} ${chalk.green(numberFormatted)}`);
     }
+
     async  request(url: string): Promise<string> {
       return new Promise<string>((resolve, reject) => {
         https
@@ -124,8 +137,9 @@ export default class Wallet {
           });
       });
     }
-  
     
+    // TODO: implement local/tesnet airdrop 
+    async airdrop(amount: number) {
+
+    }
   }
-  
-  

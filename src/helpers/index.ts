@@ -43,7 +43,7 @@ export const checkIfFileExists = (file: string): boolean => {
 
 export const importJson = (file: string): any => {
   if (!checkIfFileExists(file)) return false;
-
+  
   return require(file);
 };
 
