@@ -14,7 +14,7 @@ import {
   mountAndRunCommand,
   pullImage,
 } from '../helpers/docker';
-
+import { ensureKurtosisCli, ensureDrogonConigFolder } from './dependencies';
 import {DROGON_IMAGE, ICON_TEMPLATES_REPO} from '../constants';
 import {mainBuildGradle, gradleSettings, gitignore} from './contents';
 import {Config} from './config';
@@ -25,11 +25,12 @@ import {generateKeystore} from '../goloop';
 export const install = async () => {
   // signale.pending('Installing Drogon...Hold tight, it might take a while!');
   const progressBar = new ProgressBar(
-    'Installing Drogon...Hold tight, it might take a while!...',
+    'Installing dependencies...Hold tight, it might take a while!...',
     100
   );
   progressBar.start();
-
+  await ensureDrogonConigFolder();
+  await ensureKurtosisCli();
   await fetch_drogon();
   // await fetch_score_image();
 
