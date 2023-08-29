@@ -1,5 +1,7 @@
+import * as path from 'path';
+import * as os from 'os';
 export const DROGON_IMAGE = 'iconcommunity/drogon:latest';
-
+export const DROGON_CONFIG_FOLDER = path.join(os.homedir(), '.drogon');
 
 export const ICON_SANDBOX_DATA_REPO = 'icon-project/gochain-local';
 
