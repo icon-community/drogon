@@ -60,7 +60,7 @@ const ensureKurtosisCli = async () => {
 };
 
 //create a .drogon config folder on the home folder if it doesnt exist
-const ensureDrogonConigFolder = async () => {
+const ensureDrogonConfigFolder = async () => {
     if (!fs.existsSync(DROGON_CONFIG_FOLDER)) {
       fs.mkdirSync(DROGON_CONFIG_FOLDER);
     }
@@ -74,6 +74,6 @@ async function unzipTarGz(source: string, destination: string): Promise<void> {
             .on('end', resolve);
     });
 }
-export { ensureKurtosisCli, ensureDrogonConigFolder }
+export { ensureKurtosisCli, ensureDrogonConfigFolder }
 
 

@@ -14,7 +14,7 @@ import {
   mountAndRunCommand,
   pullImage,
 } from '../helpers/docker';
-import { ensureKurtosisCli, ensureDrogonConigFolder } from './dependencies';
+import { ensureKurtosisCli, ensureDrogonConfigFolder } from './dependencies';
 import {DROGON_IMAGE, ICON_TEMPLATES_REPO} from '../constants';
 import {mainBuildGradle, gradleSettings, gitignore} from './contents';
 import {Config} from './config';
@@ -29,7 +29,7 @@ export const install = async () => {
     100
   );
   progressBar.start();
-  await ensureDrogonConigFolder();
+  await ensureDrogonConfigFolder();
   await ensureKurtosisCli();
   await fetch_drogon();
   // await fetch_score_image();
