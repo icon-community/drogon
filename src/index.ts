@@ -49,8 +49,7 @@ const main = async () => {
         );
         process.exit();
       }
-      let projectPath = await createNewProject();
-      // await createAccount(projectPath)
+      await createNewProject();
     });
 
   //TODO: Implement Gradle start and stop logics. From this point, every gradle command should use this docker
