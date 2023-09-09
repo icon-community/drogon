@@ -19,7 +19,7 @@ import {generateKeystore, goloop} from './goloop';
 import {initSandbox, startSandbox, stopSandbox} from './sandbox';
 import {localDrogonImageId} from './helpers/docker';
 import {DROGON_IMAGE} from './constants';
-import {startTheGradleDaemon, stopTheGradleDaemon} from './gradle';
+import {startDiveDaemon, stopDrogonDaemon} from './gradle';
 
 const main = async () => {
   banner();
@@ -59,7 +59,7 @@ const main = async () => {
     .option('-p, --path [string]', 'Path of your Drogon Project', './')
     .action(function (this: any) {
       const path = resolve(this.opts().path);
-      startTheGradleDaemon(path, this.args);
+      startDiveDaemon(path, this.args);
     });
 
   program
@@ -68,7 +68,9 @@ const main = async () => {
     .option('-p, --path [string]', 'Path of your Drogon Project', './')
     .action(function (this: any) {
       const path = resolve(this.opts().path);
-      stopTheGradleDaemon(path, this.args);
+      stopDrogonDaemon(path, this.args).then(() => {
+        process.exit(0);
+      });
     });
 
   //

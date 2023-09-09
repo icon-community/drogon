@@ -6,14 +6,16 @@ import {
   stopContainerWithName,
 } from '../helpers/docker';
 var shell = require('shelljs');
-import {DROGON_CONFIG_FOLDER, DROGON_IMAGE} from '../constants';
-import { ensureDIVECli, ensureKurtosisCli } from '../core/dependencies';
+import {DROGON_CONFIG_FOLDER} from '../constants';
+import { ensureDIVECli, ensureKurtosisCli, ensureKurtosisRunning} from '../core/dependencies';
 
-export const startTheGradleDaemon = (projectPath: string, args: any) => {
-  // ensureCWDDrogonProject(projectPath);
+export const startDiveDaemon = (projectPath: string, args: any) => {
+  ensureCWDDrogonProject(projectPath);
 
   ensureKurtosisCli();
   ensureDIVECli();
+
+  ensureKurtosisRunning();
 
   const command = `${DROGON_CONFIG_FOLDER}/dive chain icon -d`
   signale.pending('Starting Drogon daemon');
@@ -31,27 +33,27 @@ export const startTheGradleDaemon = (projectPath: string, args: any) => {
   })
 };
 
-export const stopTheGradleDaemon = (projectPath: string, args: any) => {
+export const stopDrogonDaemon = async (projectPath: string, args: any) => {
   ensureCWDDrogonProject(projectPath);
-
-  const container = getContainerNameForProject(
-    projectPath,
-    DROGON_IMAGE,
-    'drogon'
-  );
-
-  const command = 'gradle --stop';
+  
+  const diveStop = `${DROGON_CONFIG_FOLDER}/dive clean`
   signale.pending('Stopping Drogon daemon');
-  mountAndRunCommandInContainer(
-    container,
-    projectPath,
-    args,
-    command,
-    async (code: any) => {
-      await stopContainerWithName(container);
-      signale.success('Stopped Drogon daemon');
-      process.exit(code);
-    },
-    true
-  );
+  await stopTheService(diveStop);
+
+  const kurtosisStop = `${DROGON_CONFIG_FOLDER}/kurtosis engine stop`
+  await stopTheService(kurtosisStop);
+
+  signale.success('Stopped Drogon daemon');
 };
+
+
+const stopTheService = async (command: string) => {
+  shell.exec(command,(code: any, stdout: any, stderr: any) => {
+    if (code !== 0) {
+      process.exit(code);
+    }
+    else {
+      process.exit(code);
+    }
+  })
+}

@@ -70,4 +70,8 @@ const unzipTarGz = async(source: string, destination: string): Promise<void> => 
     });
 }
 
-export { ensureKurtosisCli, ensureDIVECli, ensureDrogonConfigFolder };
+const ensureKurtosisRunning = () => {
+    shell.exec(`${DROGON_CONFIG_FOLDER}/kurtosis engine start`, { silent: true });
+}
+
+export { ensureKurtosisCli, ensureDIVECli, ensureDrogonConfigFolder, ensureKurtosisRunning };
