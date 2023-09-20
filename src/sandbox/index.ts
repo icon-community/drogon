@@ -229,7 +229,6 @@ export const startSandbox = (projectPath: string, args: any) => {
 
   mountAndRunCommandInContainer(
     container,
-    projectPath,
     args,
     command,
     (exitCode: number, output: any) => {

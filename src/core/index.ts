@@ -14,7 +14,7 @@ import {
   mountAndRunCommand,
   pullImage,
 } from '../helpers/docker';
-import { ensureKurtosisCli, ensureDIVECli, ensureDrogonConfigFolder } from './dependencies';
+import { ensureKurtosisCli, ensureDIVECli, ensureDrogonConfigFolder, ensureKurtosisRunning } from './dependencies';
 import {DROGON_CONFIG_FOLDER, DROGON_IMAGE, ICON_TEMPLATES_REPO} from '../constants';
 import {mainBuildGradle, gradleSettings, gitignore} from './contents';
 import {Config} from './config';
@@ -35,26 +35,13 @@ export const install = async () => {
   await ensureKurtosisCli();
   await ensureDIVECli()
   // await fetch_drogon();
-  await initializeKurtosis();
+  await ensureKurtosisRunning();
   // await fetch_score_image();
 
   // progressBar.stopWithMessage('Drogon ready for use.');
   // signale.success('Drogon ready for use.');
   // process.exit();
 };
-
-export const initializeKurtosis = async () => {
-  const command = `${DROGON_CONFIG_FOLDER}/kurtosis engine start`
-  signale.pending('Initializing Kurtosis');
-  shell.exec(command, {async:true}, (code: any) => {
-    if (code !== 0) {
-      signale.error('Failed to initialize Kurtosis');
-    }
-    else {
-      signale.success('Initialized Kurtosis');
-    }
-  })
-}
 
 export const fetch_drogon = async () => {
   const localImage = await localDrogonImageId(DROGON_IMAGE);

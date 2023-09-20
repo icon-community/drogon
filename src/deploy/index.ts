@@ -95,7 +95,6 @@ export const deployContracts = async (
 
     mountAndRunCommandInContainer(
       container,
-      projectPath,
       args,
       command,
       async (exitCode: any, output: string) => {

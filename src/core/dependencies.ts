@@ -7,6 +7,7 @@ var tar = require('tar');
 import signale from 'signale';
 
 import { DROGON_CONFIG_FOLDER, KURTOSIS_RELEASES_VERSION, DIVE_RELEASES_VERSION, DIVE_CLI, DIVE_CLI_REPO, KURTOSIS_CLI, KURTOSIS_CLI_REPO } from '../constants';
+import { getDIVEContainerId, mountAndRunCommandInContainerAsync } from '../helpers/docker';
 
 async function downloadAndExtractLatestRelease(repo: string, toolName: string, version: string): Promise<void> {
 
@@ -79,5 +80,22 @@ const ensureDiveStopped = () => {
 const ensureKurtosisRunning = () => {
     shell.exec(`${DROGON_CONFIG_FOLDER}/kurtosis engine start`, { silent: true });
 }
-
-export { ensureKurtosisCli, ensureDIVECli,ensureDiveStopped, ensureDrogonConfigFolder,ensureKurtosisClean, ensureKurtosisRunning };
+const ensureGradleInDIVEContainer = async () => {
+    const container_id = await getDIVEContainerId()
+    if(container_id == null) {
+        throw new Error("DIVE container not found");
+    }
+    const command = `mkdir -p /gradle && \
+    wget -O gradle-5.5.1-all.zip https://services.gradle.org/distributions/gradle-5.5.1-all.zip && \
+    unzip gradle-5.5.1-all.zip && \
+    mv gradle-5.5.1 /gradle`
+    try {
+        await mountAndRunCommandInContainerAsync(container_id, [], command, true);
+    } catch (error) {
+        console.error("Command failed with exit code:", error);
+        throw error
+    }
+    
+}
+export { ensureKurtosisCli, ensureDIVECli,ensureDiveStopped, ensureDrogonConfigFolder,ensureKurtosisClean, ensureKurtosisRunning,
+    ensureGradleInDIVEContainer };

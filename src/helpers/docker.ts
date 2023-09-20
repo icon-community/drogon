@@ -50,6 +50,19 @@ export const localDrogonImageId = async (
   }
   return null;
 };
+export const getContainerIdFromNamePattern = async (
+  namePattern: string
+): Promise<string | null> => {
+  const docker = dockerInit();
+  const containers = await docker.listContainers();
+  const matchedContainer = containers.find(container => 
+    container.Names.some(name => name.includes(namePattern))
+  );
+  return matchedContainer ? matchedContainer.Id : null;
+};
+export const getDIVEContainerId = async (): Promise<string | null> => { 
+  return await getContainerIdFromNamePattern('icon-node-0xacbc4e');
+}
 
 export const removeImage = async (imageId: string): Promise<boolean> => {
   const docker = dockerInit();
@@ -132,9 +145,20 @@ export const mountAndRunCommand = async (
   );
 };
 
+export const mountAndRunCommandInContainerAsync = (containerName: string,  args: any, command: string, logToStdout: boolean): Promise<any> => {
+  return new Promise((resolve, reject) => {
+      mountAndRunCommandInContainer(containerName, args, command, (exitCode: number, output: any) => {
+          if (exitCode) {
+              reject({ exitCode, output });
+          } else {
+              resolve(output);
+          }
+      }, logToStdout);
+  });
+};
+
 export const mountAndRunCommandInContainer = async (
   containerName: string,
-  projectPath: string,
   args: any,
   command: string,
   cb: any,
@@ -155,7 +179,7 @@ export const mountAndRunCommandInContainer = async (
       AttachStderr: true,
       AttachStdin: true,
       Tty: true,
-      WorkingDir: '/goloop/app',
+      WorkingDir: '/',
       Cmd: ['sh', '-c', command],
     },
     (err: any, exec: any) => {
@@ -188,7 +212,8 @@ export const mountAndRunCommandInContainer = async (
 export async function interactWithDockerContainer(
   containerName: string,
   destination: string,
-  command: string
+  command: string,
+  shoudStartContainer: boolean = true
 ) {
   const docker = new Docker();
   const container = await docker.getContainer(containerName);
@@ -201,8 +226,10 @@ export async function interactWithDockerContainer(
     hijack: true,
   });
 
-  // Start the container
-  await container.start();
+  if(shoudStartContainer === true){
+    // Start the container
+    await container.start();
+  }
 
   // Execute a command in the container
   container.exec(

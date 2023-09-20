@@ -54,7 +54,6 @@ export const runGoloopCmd = async (projectPath: any, command: any, cb: any) => {
 
   await mountAndRunCommandInContainer(
     container,
-    '/goloop/app',
     [],
     command,
     (exitCode: any, output: string) => {

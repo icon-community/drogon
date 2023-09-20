@@ -39,7 +39,6 @@ export const mountAndOptimize = (
   );
   mountAndRunCommandInContainer(
     container,
-    projectPath,
     args,
     command,
     cb,
