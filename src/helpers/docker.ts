@@ -1,7 +1,7 @@
 import Docker from 'dockerode';
 import {DROGON_IMAGE} from '../constants';
 import {getContainerNameForProject, panic} from '../helpers';
-import {PassThrough} from 'stream';
+import tar from 'tar-fs';
 
 export const dockerInit = () => {
   return new Docker(); //defaults to above if env variables are not used
@@ -282,3 +282,13 @@ export const stopContainerWithName = async (containerName: string) => {
   const container = await docker.getContainer(containerName);
   await container.stop();
 };
+export async function copyToContainer(
+  containerName: string,
+  sourcePath: string,
+  destinationPath: string
+): Promise<void> {
+  const docker = new Docker();
+  const container = docker.getContainer(containerName);
+  const tarStream = tar.pack(sourcePath);
+  await container.putArchive(tarStream, { path: destinationPath });
+}
