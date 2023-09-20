@@ -175,3 +175,8 @@ export const getContainerNameForProject = (
   const containerName = `${containerNamePrefix}-${projectName}-${hash}`;
   return containerName;
 };
+
+// introduce an artificial wait in seconds
+export const wait = (seconds: number) => {
+  return new Promise(resolve => setTimeout(resolve, seconds * 1000));
+};
