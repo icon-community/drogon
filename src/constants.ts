@@ -1,5 +1,16 @@
-export const DROGON_IMAGE = 'iconcommunity/drogon:latest';
+import * as path from 'path';
+import * as os from 'os';
 
+export const KURTOSIS_RELEASES_VERSION = 'tags/0.82.6';
+export const KURTOSIS_CLI_REPO = 'kurtosis-tech/kurtosis-cli-release-artifacts';
+export const KURTOSIS_CLI = 'kurtosis';
+
+export const DIVE_RELEASES_VERSION = 'latest' //'v0.0.8-beta';
+export const DIVE_CLI_REPO = 'HugoByte/dive';
+export const DIVE_CLI = 'dive';
+
+export const DROGON_IMAGE = 'iconcommunity/drogon:latest';
+export const DROGON_CONFIG_FOLDER = path.join(os.homedir(), '.drogon');
 
 export const ICON_SANDBOX_DATA_REPO = 'icon-project/gochain-local';
 

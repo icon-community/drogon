@@ -14,29 +14,47 @@ import {
   mountAndRunCommand,
   pullImage,
 } from '../helpers/docker';
-
-import {DROGON_IMAGE, ICON_TEMPLATES_REPO} from '../constants';
+import { ensureKurtosisCli, ensureDIVECli, ensureDrogonConfigFolder } from './dependencies';
+import {DROGON_CONFIG_FOLDER, DROGON_IMAGE, ICON_TEMPLATES_REPO} from '../constants';
 import {mainBuildGradle, gradleSettings, gitignore} from './contents';
 import {Config} from './config';
 import {runTackle, scaffoldProject} from './scaffold';
 import signale from 'signale';
 import {generateKeystore} from '../goloop';
+var shell = require('shelljs');
 
 export const install = async () => {
   // signale.pending('Installing Drogon...Hold tight, it might take a while!');
-  const progressBar = new ProgressBar(
-    'Installing Drogon...Hold tight, it might take a while!...',
-    100
-  );
-  progressBar.start();
-
-  await fetch_drogon();
+  // const progressBar = new ProgressBar(
+  //   'Installing dependencies...Hold tight, it might take a while!...',
+  //   100
+  // );
+  // progressBar.start();
+  signale.start('Installing dependencies...Hold tight, it might take a while!...');
+  await ensureDrogonConfigFolder();
+  await ensureKurtosisCli();
+  await ensureDIVECli()
+  // await fetch_drogon();
+  await initializeKurtosis();
   // await fetch_score_image();
 
-  progressBar.stopWithMessage('Drogon ready for use.');
+  // progressBar.stopWithMessage('Drogon ready for use.');
   // signale.success('Drogon ready for use.');
-  process.exit();
+  // process.exit();
 };
+
+export const initializeKurtosis = async () => {
+  const command = `${DROGON_CONFIG_FOLDER}/kurtosis engine start`
+  signale.pending('Initializing Kurtosis');
+  shell.exec(command, {async:true}, (code: any) => {
+    if (code !== 0) {
+      signale.error('Failed to initialize Kurtosis');
+    }
+    else {
+      signale.success('Initialized Kurtosis');
+    }
+  })
+}
 
 export const fetch_drogon = async () => {
   const localImage = await localDrogonImageId(DROGON_IMAGE);
