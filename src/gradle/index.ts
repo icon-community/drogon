@@ -1,15 +1,10 @@
 import signale from 'signale';
-import { ensureCWDDrogonProject, wait, getContainerNameForProject, executeShellCommand } from '../helpers';
-import {
-  mountAndRunCommandInContainer,
-  runAContainerInBackground,
-  stopContainerWithName,
-} from '../helpers/docker';
+import { ensureCWDDrogonProject, wait } from '../helpers';
 var shell = require('shelljs');
 import { DROGON_CONFIG_FOLDER } from '../constants';
-import { ensureDIVECli, ensureGradleInDIVEContainer, ensureKurtosisCli, ensureKurtosisRunning } from '../core/dependencies';
+import { ensureDIVECli, ensureKurtosisCli, ensureKurtosisRunning, ensureGradleDaemon, stopGradleDaemon } from '../core/dependencies';
 
-export const startDiveDaemon = (projectPath: string, args: any) => {
+export const startDaemons = (projectPath: string, args: any) => {
   ensureCWDDrogonProject(projectPath);
 
   ensureKurtosisCli();
@@ -17,17 +12,11 @@ export const startDiveDaemon = (projectPath: string, args: any) => {
 
   ensureKurtosisRunning();
   signale.pending('Starting Drogon daemon');
-  // wait for 10 seconds for the engine to be active
 
-  wait(10)
+  wait(5)
     .then(() => {
-      const command = `${DROGON_CONFIG_FOLDER}/dive chain icon`;
-      return executeShellCommand(command);
+      return ensureGradleDaemon(projectPath, args)
     })
-    .then(() => {
-      return wait(10);
-    })
-    .then(ensureGradleInDIVEContainer)
     .then(() => {
       signale.success('Started Drogon daemon');
       process.exit(0);
@@ -40,7 +29,7 @@ export const startDiveDaemon = (projectPath: string, args: any) => {
 
 };
 
-export const stopDrogonDaemon = async (projectPath: string, args: any) => {
+export const stopDaemons = async (projectPath: string, args: any) => {
   ensureCWDDrogonProject(projectPath);
 
   try {
@@ -50,7 +39,8 @@ export const stopDrogonDaemon = async (projectPath: string, args: any) => {
     await wait(5)
     const kurtosisStop = `${DROGON_CONFIG_FOLDER}/kurtosis engine stop`
     await stopTheService(kurtosisStop);
-    await wait(5)
+    await wait(2)
+    await stopGradleDaemon(projectPath, args);
     signale.success('Stopped Drogon daemon');
   } catch (error) {
     console.log(error)

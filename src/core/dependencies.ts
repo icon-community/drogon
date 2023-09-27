@@ -6,8 +6,9 @@ import * as zlib from 'zlib';
 var tar = require('tar');
 import signale from 'signale';
 
-import { DROGON_CONFIG_FOLDER, KURTOSIS_RELEASES_VERSION, DIVE_RELEASES_VERSION, DIVE_CLI, DIVE_CLI_REPO, KURTOSIS_CLI, KURTOSIS_CLI_REPO } from '../constants';
-import { getDIVEContainerId, mountAndRunCommandInContainerAsync } from '../helpers/docker';
+import { DROGON_CONFIG_FOLDER, KURTOSIS_RELEASES_VERSION, DIVE_RELEASES_VERSION, DIVE_CLI, DIVE_CLI_REPO, KURTOSIS_CLI, KURTOSIS_CLI_REPO, DROGON_IMAGE } from '../constants';
+import { getDIVEContainerId, mountAndRunCommandInContainer, mountAndRunCommandInContainerAsync, runAContainerInBackground, stopContainerWithName } from '../helpers/docker';
+import { getContainerNameForProject } from '../helpers';
 
 async function downloadAndExtractLatestRelease(repo: string, toolName: string, version: string): Promise<void> {
 
@@ -43,7 +44,7 @@ async function downloadAndExtractLatestRelease(repo: string, toolName: string, v
     signale.success(`Downloaded ${toolName}!`);
 }
 
-const ensureCLI =async (toolName: string, repo: string, version: string): Promise<void>  => {
+const ensureCLI = async (toolName: string, repo: string, version: string): Promise<void> => {
     const result = shell.which(`${DROGON_CONFIG_FOLDER}/${toolName}`);
 
     if (!result) {
@@ -53,7 +54,7 @@ const ensureCLI =async (toolName: string, repo: string, version: string): Promis
 }
 
 const ensureKurtosisCli = () => ensureCLI(KURTOSIS_CLI, KURTOSIS_CLI_REPO, KURTOSIS_RELEASES_VERSION);
-const ensureDIVECli = () => ensureCLI(DIVE_CLI,DIVE_CLI_REPO ,DIVE_RELEASES_VERSION);
+const ensureDIVECli = () => ensureCLI(DIVE_CLI, DIVE_CLI_REPO, DIVE_RELEASES_VERSION);
 
 const ensureDrogonConfigFolder = async () => {
     if (!fs.existsSync(DROGON_CONFIG_FOLDER)) {
@@ -61,7 +62,7 @@ const ensureDrogonConfigFolder = async () => {
     }
 }
 
-const unzipTarGz = async(source: string, destination: string): Promise<void> => {
+const unzipTarGz = async (source: string, destination: string): Promise<void> => {
     return new Promise((resolve, reject) => {
         fs.createReadStream(source)
             .pipe(zlib.createGunzip())
@@ -82,7 +83,7 @@ const ensureKurtosisRunning = () => {
 }
 const ensureGradleInDIVEContainer = async () => {
     const container_id = await getDIVEContainerId()
-    if(container_id == null) {
+    if (container_id == null) {
         throw new Error("DIVE container not found");
     }
     const command = `mkdir -p /gradle && \
@@ -95,7 +96,43 @@ const ensureGradleInDIVEContainer = async () => {
         console.error("Command failed with exit code:", error);
         throw error
     }
-    
+
 }
-export { ensureKurtosisCli, ensureDIVECli,ensureDiveStopped, ensureDrogonConfigFolder,ensureKurtosisClean, ensureKurtosisRunning,
-    ensureGradleInDIVEContainer };
+const ensureGradleDaemon = async (projectPath: string, args: any) => {
+    const command = 'tail -f /dev/null';
+    await runAContainerInBackground(
+        projectPath,
+        DROGON_IMAGE,
+        args,
+        command,
+        'drogon'
+    )
+
+}
+const stopGradleDaemon = async (projectPath: string, args: any) => {
+    const container = getContainerNameForProject(
+        projectPath,
+        DROGON_IMAGE,
+        'drogon'
+    );
+    const command = 'gradle --stop';
+    signale.pending('Stopping Drogon daemon');
+    try {
+        await mountAndRunCommandInContainerAsync(container, [], command, true);
+        await stopContainerWithName(container);
+    } catch (error) {
+        console.error("Command failed with exit code:", error);
+        throw error
+    }
+}
+export {
+    ensureKurtosisCli,
+    ensureDIVECli,
+    ensureDiveStopped,
+    ensureDrogonConfigFolder,
+    ensureKurtosisClean,
+    ensureKurtosisRunning,
+    ensureGradleInDIVEContainer,
+    ensureGradleDaemon,
+    stopGradleDaemon
+};
