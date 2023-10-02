@@ -190,7 +190,7 @@ export const mountAndRunCommandInContainer = async (
       AttachStderr: true,
       AttachStdin: true,
       Tty: true,
-      WorkingDir: '/',
+      WorkingDir: '/goloop/app/',
       Cmd: ['sh', '-c', command],
     },
     (err: any, exec: any) => {
