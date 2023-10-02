@@ -39,7 +39,7 @@ export const ICON_CONFIG = `{
   "p2p": "127.0.0.1:8080",
   "p2p_listen": "",
   "role": 1,
-  "rpc_addr": ":9080",
+  "rpc_addr": ":9082",
   "rpc_debug": true,
   "rpc_dump": false,
   "log_level": "trace",
