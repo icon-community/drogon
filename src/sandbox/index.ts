@@ -1,7 +1,7 @@
 import * as fs from 'fs';
-import {basename} from 'path';
-import {DROGON_IMAGE, ICON_CONFIG, ICON_SANDBOX_DATA_REPO} from '../constants';
-import {verifySourcePath} from '../core/scaffold';
+import { basename } from 'path';
+import { DROGON_IMAGE, ICON_CONFIG, ICON_SANDBOX_DATA_REPO } from '../constants';
+import { verifySourcePath } from '../core/scaffold';
 import {
   checkIfFileExists,
   ensureCWDDrogonProject,
@@ -15,9 +15,9 @@ import {
   dockerInit,
   mountAndRunCommandInContainer,
 } from '../helpers/docker';
-import {generateKeystore, runGoloopCmd} from '../goloop';
+import { generateKeystore, runGoloopCmd } from '../goloop';
 import Wallet from '../core/keystore';
-import { ensureKurtosisCli, ensureDIVECli, ensureKurtosisRunning, ensureGradleDaemon, ensureGradleDaemonIsRunning, ensureDiveRunning } from '../core/dependencies';
+import { ensureKurtosisCli, ensureDIVECli, ensureKurtosisRunning, ensureGradleDaemonIsRunning, ensureDiveRunning, stopGradleDaemon, ensureDiveStopped, ensureKurtosisStopped, getGradeDaemeonContainerId } from '../core/dependencies';
 import signale from 'signale';
 
 const sandbox_folder = '.drogon/sandbox';
@@ -76,8 +76,8 @@ const fetchProjectWithInContainer = async (
     (err: any, exec: any) => {
       if (err) panic(`Failed to start container. ${err}`);
 
-      exec.start({stream: true, hijack: true}, (err: any, stream: any) => {
-        stream.on('end', async () => {});
+      exec.start({ stream: true, hijack: true }, (err: any, stream: any) => {
+        stream.on('end', async () => { });
 
         stream.on('data', async (chunk: any) => {
           output += chunk.toString();
@@ -185,13 +185,13 @@ export const initSandbox = (projectPath: string, opts: any, args: any) => {
   ensureKurtosisCli();
   ensureDIVECli();
   ensureKurtosisRunning();
-  fs.mkdirSync(`${projectPath}/.drogon/sandbox`, {recursive: true});
+  fs.mkdirSync(`${projectPath}/.drogon/sandbox`, { recursive: true });
   wait(1)
     .then(() => {
       return ensureGradleDaemonIsRunning(projectPath, args)
     })
     .then(() => {
-      return ensureDiveRunning()
+      return wait(2)
     })
     .then(() => {
       return setupIconConfig(projectPath, opts.password)
@@ -216,40 +216,70 @@ export const initSandbox = (projectPath: string, opts: any, args: any) => {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const startSandbox = (projectPath: string, args: any) => {
-  console.log(`${projectPath}./${sandbox_folder}/single`);
+
   ensureCWDDrogonProject(projectPath);
+  ensureKurtosisCli();
+  ensureDIVECli();
+  ensureKurtosisRunning();
+  wait(1)
+    .then(() => {
+      return ensureGradleDaemonIsRunning(projectPath, args)
+    })
+    .then(() => {
+      return ensureDiveRunning()
+    })
+    .then(() => {
+      return getGradeDaemeonContainerId(projectPath)
+    })
+    .then((container) => {
+      const command = `GOCHAIN_KEYSTORE=/goloop/app/.drogon/sandbox/keystore.json \
+      GOCHAIN_CONFIG=/goloop/app/.drogon/sandbox/config.json \
+      GOCHAIN_DATA=/goloop/app/.drogon/sandbox/ \
+      /goloop/run.sh`;
+      if(container == null) {
+        throw new Error('Gradle daemon is not running')
+      }
+      mountAndRunCommandInContainer(
+        container,
+        args,
+        command,
+        (exitCode: number, output: any) => {
+          console.log(output);
+        },
+        true
+      );
+      signale.success('Started sandbox');
+    })
+    .catch(error => {
+      signale.error('Failed to start the sandbox:', error);
+      process.exit(1);
+    });
 
-  const container = getContainerNameForProject(
-    projectPath,
-    DROGON_IMAGE,
-    'drogon'
-  );
-
-  const command =
-    'GOCHAIN_KEYSTORE=/goloop/app/.drogon/sandbox/keystore.json GOCHAIN_CONFIG=/goloop/app/.drogon/sandbox/config.json GOCHAIN_DATA=/goloop/app/.drogon/sandbox/ /goloop/run.sh';
-
-  mountAndRunCommandInContainer(
-    container,
-    args,
-    command,
-    (exitCode: number, output: any) => {
-      console.log(output);
-    },
-    true
-  );
 };
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const stopSandbox = (projectPath: string, args: any) => {
+
   ensureCWDDrogonProject(projectPath);
-
-  const container = getContainerNameForProject(
-    projectPath,
-    DROGON_IMAGE,
-    'sandbox'
-  );
-
-  throw 'Not implemented!';
+  ensureKurtosisCli();
+  ensureDIVECli();
+  wait(1)
+    .then(() => {
+      return stopGradleDaemon(projectPath, args)
+    })
+    .then(() => {
+      return ensureDiveStopped()
+    })
+    .then(() => {
+      return ensureKurtosisStopped()
+    })
+    .then(() => {
+      signale.success('Stopped sandbox');
+    })
+    .catch(error => {
+      signale.error('Failed to stop the sandbox:', error);
+      process.exit(1);
+    });
 };
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

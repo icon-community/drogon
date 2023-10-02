@@ -50,20 +50,31 @@ export const localDrogonImageId = async (
   }
   return null;
 };
-export const getContainerIdFromNamePattern = async (
+export const getContainerIdsFromNamePattern = async (
   namePattern: string
-): Promise<string | null> => {
-  const docker = dockerInit();
-  const containers = await docker.listContainers();
-  const matchedContainer = containers.find(container => 
-    container.Names.some(name => name.includes(namePattern))
-  );
-  return matchedContainer ? matchedContainer.Id : null;
-};
-export const getDIVEContainerId = async (): Promise<string | null> => { 
-  return await getContainerIdFromNamePattern('icon-node-0xacbc4e');
+): Promise<string[] | null> => {
+  try {
+    const docker = dockerInit();
+    const containers = await docker.listContainers();
+    const matchedContainers = containers.filter(container => 
+      container.Names.some(name => name.includes(namePattern))
+    );
+    return matchedContainers.map(container => container.Id);
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
 }
-
+export const getDIVEContainerId = async (): Promise<string | null> => { 
+  const containers = await getContainerIdsFromNamePattern('icon-node-0xacbc4e');
+  if (containers != null && containers?.length > 0) {
+    return containers[0];
+  }
+  return null
+}
+export const getKurtosisContainerIds = async () => {
+  return  await getContainerIdsFromNamePattern('kurtosis');
+}
 export const removeImage = async (imageId: string): Promise<boolean> => {
   const docker = dockerInit();
   const image = await docker.getImage(imageId);

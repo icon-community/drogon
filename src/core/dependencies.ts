@@ -7,7 +7,7 @@ var tar = require('tar');
 import signale from 'signale';
 
 import { DROGON_CONFIG_FOLDER, KURTOSIS_RELEASES_VERSION, DIVE_RELEASES_VERSION, DIVE_CLI, DIVE_CLI_REPO, KURTOSIS_CLI, KURTOSIS_CLI_REPO, DROGON_IMAGE } from '../constants';
-import { getDIVEContainerId, mountAndRunCommandInContainerAsync, runAContainerInBackground, stopContainerWithName } from '../helpers/docker';
+import { getContainerIdsFromNamePattern, getDIVEContainerId, getKurtosisContainerIds, mountAndRunCommandInContainerAsync, runAContainerInBackground, stopContainerWithName } from '../helpers/docker';
 import { getContainerNameForProject } from '../helpers';
 
 async function downloadAndExtractLatestRelease(repo: string, toolName: string, version: string): Promise<void> {
@@ -72,14 +72,25 @@ const unzipTarGz = async (source: string, destination: string): Promise<void> =>
     });
 }
 
-const ensureKurtosisClean = () => {
+const ensureKurtosisStopped = async () => {
     shell.exec(`${DROGON_CONFIG_FOLDER}/kurtosis engine clean`, { silent: true });
+    shell.exec(`${DROGON_CONFIG_FOLDER}/kurtosis engine stop`, { silent: true });
+    const kurtosis_containers = await getKurtosisContainerIds()
+    if(kurtosis_containers != null && kurtosis_containers.length > 0){
+        for(const container_id of kurtosis_containers){
+            await stopContainerWithName(container_id)
+        }
+    }
 }
 const ensureKurtosisRunning = () => {
     shell.exec(`${DROGON_CONFIG_FOLDER}/kurtosis engine start`, { silent: true });
 }
-const ensureDiveStopped = () => {
+const ensureDiveStopped = async () => {
     shell.exec(`${DROGON_CONFIG_FOLDER}/dive clean`, { silent: true });
+    const container_id = await getDIVEContainerId()
+    if (container_id != null) {
+        await stopContainerWithName(container_id)
+    }
 }
 const ensureDiveRunning = async () => {
     const container_id = await getDIVEContainerId()
@@ -104,12 +115,20 @@ const ensureGradleInDIVEContainer = async () => {
     }
 
 }
-const ensureGradleDaemonIsRunning = async (projectPath: string, args:any) => {
-    const container = getContainerNameForProject(
+const getGradeDaemeonContainerId = async (projectPath: string) => {
+    const container_name = getContainerNameForProject(
         projectPath,
         DROGON_IMAGE,
         'drogon'
     );
+    const container = await getContainerIdsFromNamePattern(container_name)
+    if (container == null || container.length == 0) {
+        return null
+    }
+    return container[0]
+}
+const ensureGradleDaemonIsRunning = async (projectPath: string, args:any) => {
+    const container = await getGradeDaemeonContainerId(projectPath)
     if (container == null) {
         await ensureGradleDaemon(projectPath, args)
     }
@@ -127,11 +146,10 @@ const ensureGradleDaemon = async (projectPath: string, args: any) => {
 
 }
 const stopGradleDaemon = async (projectPath: string, args: any) => {
-    const container = getContainerNameForProject(
-        projectPath,
-        DROGON_IMAGE,
-        'drogon'
-    );
+    const container = await getGradeDaemeonContainerId(projectPath)
+    if (container == null) {
+        return
+    }
     const command = 'gradle --stop';
     signale.pending('Stopping Drogon daemon');
     try {
@@ -148,10 +166,10 @@ export {
     ensureDiveRunning,
     ensureDiveStopped,
     ensureDrogonConfigFolder,
-    ensureKurtosisClean,
+    ensureKurtosisStopped,
     ensureKurtosisRunning,
     ensureGradleInDIVEContainer,
-    ensureGradleDaemon,
+    getGradeDaemeonContainerId,
     ensureGradleDaemonIsRunning,
     stopGradleDaemon
 };

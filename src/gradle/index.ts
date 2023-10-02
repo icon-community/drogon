@@ -2,7 +2,7 @@ import signale from 'signale';
 import { ensureCWDDrogonProject, wait } from '../helpers';
 var shell = require('shelljs');
 import { DROGON_CONFIG_FOLDER } from '../constants';
-import { ensureDIVECli, ensureKurtosisCli, ensureKurtosisRunning, ensureGradleDaemon, stopGradleDaemon } from '../core/dependencies';
+import { ensureDIVECli, ensureGradleDaemonIsRunning, ensureKurtosisCli, ensureKurtosisRunning, stopGradleDaemon } from '../core/dependencies';
 
 export const startDaemons = (projectPath: string, args: any) => {
   ensureCWDDrogonProject(projectPath);
@@ -15,7 +15,7 @@ export const startDaemons = (projectPath: string, args: any) => {
 
   wait(5)
     .then(() => {
-      return ensureGradleDaemon(projectPath, args)
+      return ensureGradleDaemonIsRunning(projectPath, args)
     })
     .then(() => {
       signale.success('Started Drogon daemon');
