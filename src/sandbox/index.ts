@@ -9,16 +9,16 @@ import {
   importJson,
   panic,
   ProgressBar,
+  wait,
 } from '../helpers';
 import {
   dockerInit,
   mountAndRunCommandInContainer,
-  stopContainerWithName,
 } from '../helpers/docker';
-import signale from 'signale';
-import {exitCode} from 'process';
 import {generateKeystore, runGoloopCmd} from '../goloop';
 import Wallet from '../core/keystore';
+import { ensureKurtosisCli, ensureDIVECli, ensureKurtosisRunning, ensureGradleDaemon, ensureGradleDaemonIsRunning, ensureDiveRunning } from '../core/dependencies';
+import signale from 'signale';
 
 const sandbox_folder = '.drogon/sandbox';
 
@@ -156,12 +156,10 @@ const setupIconConfig = async (projectPath: string, password: string) => {
 
   if (!config) panic('Please run the command inside the Drogon Project');
 
-  let address = '';
   // get configured keystore from config
   let keystoreFile = config.keystore;
 
   if (!checkIfFileExists(`${projectPath}/` + keystoreFile)) {
-    // await generateKeystore(`${projectPath}/.drogon/sandbox`, "gochain", [])
     const command =
       'goloop ks gen --out /goloop/app/.drogon/sandbox/keystore.json';
     await runGoloopCmd(`${projectPath}`, command, (output: any) => {
@@ -182,34 +180,37 @@ const setupIconConfig = async (projectPath: string, password: string) => {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const initSandbox = (projectPath: string, opts: any, args: any) => {
-  // TODO:
-  // - add config initializations
-  // - god wallet configuration
-  // - genesis
 
   ensureCWDDrogonProject(projectPath);
-
+  ensureKurtosisCli();
+  ensureDIVECli();
+  ensureKurtosisRunning();
   fs.mkdirSync(`${projectPath}/.drogon/sandbox`, {recursive: true});
-
-  // setup ICON config
-  setupIconConfig(projectPath, opts.password)
-    .then(() => {})
-    .catch(e => {
-      console.log(e);
-      panic('failed to init sandbox');
-    });
-
-  scaffoldSandboxData(
-    'data/single',
-    projectPath,
-    ICON_SANDBOX_DATA_REPO,
-    `${projectPath}/.drogon/sandbox`
-  )
+  wait(1)
     .then(() => {
-      console.log('Sandbox initialised');
+      return ensureGradleDaemonIsRunning(projectPath, args)
+    })
+    .then(() => {
+      return ensureDiveRunning()
+    })
+    .then(() => {
+      return setupIconConfig(projectPath, opts.password)
+    })
+    .then(() => {
+      return scaffoldSandboxData(
+        'data/single',
+        projectPath,
+        ICON_SANDBOX_DATA_REPO,
+        `${projectPath}/.drogon/sandbox`
+      )
+    })
+    .then(() => {
+      signale.success('Initialized sandbox');
+
     })
     .catch(error => {
-      console.log(error);
+      signale.error('Failed to initialize the sandbox:', error);
+      process.exit(1);
     });
 };
 

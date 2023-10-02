@@ -5,7 +5,6 @@ import {
   checkIfFileExists,
   ensureCWDDrogonProject,
   panic,
-  ProgressBar,
   safeexit,
 } from '../helpers';
 import {
@@ -15,7 +14,7 @@ import {
   pullImage,
 } from '../helpers/docker';
 import { ensureKurtosisCli, ensureDIVECli, ensureDrogonConfigFolder, ensureKurtosisRunning } from './dependencies';
-import {DROGON_CONFIG_FOLDER, DROGON_IMAGE, ICON_TEMPLATES_REPO} from '../constants';
+import {DROGON_IMAGE, ICON_TEMPLATES_REPO} from '../constants';
 import {mainBuildGradle, gradleSettings, gitignore} from './contents';
 import {Config} from './config';
 import {runTackle, scaffoldProject} from './scaffold';
@@ -34,7 +33,7 @@ export const install = async () => {
   await ensureDrogonConfigFolder();
   await ensureKurtosisCli();
   await ensureDIVECli()
-  // await fetch_drogon();
+  await fetch_drogon();
   await ensureKurtosisRunning();
   // await fetch_score_image();
 

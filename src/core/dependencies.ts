@@ -7,7 +7,7 @@ var tar = require('tar');
 import signale from 'signale';
 
 import { DROGON_CONFIG_FOLDER, KURTOSIS_RELEASES_VERSION, DIVE_RELEASES_VERSION, DIVE_CLI, DIVE_CLI_REPO, KURTOSIS_CLI, KURTOSIS_CLI_REPO, DROGON_IMAGE } from '../constants';
-import { getDIVEContainerId, mountAndRunCommandInContainer, mountAndRunCommandInContainerAsync, runAContainerInBackground, stopContainerWithName } from '../helpers/docker';
+import { getDIVEContainerId, mountAndRunCommandInContainerAsync, runAContainerInBackground, stopContainerWithName } from '../helpers/docker';
 import { getContainerNameForProject } from '../helpers';
 
 async function downloadAndExtractLatestRelease(repo: string, toolName: string, version: string): Promise<void> {
@@ -75,11 +75,17 @@ const unzipTarGz = async (source: string, destination: string): Promise<void> =>
 const ensureKurtosisClean = () => {
     shell.exec(`${DROGON_CONFIG_FOLDER}/kurtosis engine clean`, { silent: true });
 }
+const ensureKurtosisRunning = () => {
+    shell.exec(`${DROGON_CONFIG_FOLDER}/kurtosis engine start`, { silent: true });
+}
 const ensureDiveStopped = () => {
     shell.exec(`${DROGON_CONFIG_FOLDER}/dive clean`, { silent: true });
 }
-const ensureKurtosisRunning = () => {
-    shell.exec(`${DROGON_CONFIG_FOLDER}/kurtosis engine start`, { silent: true });
+const ensureDiveRunning = async () => {
+    const container_id = await getDIVEContainerId()
+    if(container_id == null){
+        shell.exec(`${DROGON_CONFIG_FOLDER}/dive chain icon`, { silent: false })
+    }
 }
 const ensureGradleInDIVEContainer = async () => {
     const container_id = await getDIVEContainerId()
@@ -98,6 +104,17 @@ const ensureGradleInDIVEContainer = async () => {
     }
 
 }
+const ensureGradleDaemonIsRunning = async (projectPath: string, args:any) => {
+    const container = getContainerNameForProject(
+        projectPath,
+        DROGON_IMAGE,
+        'drogon'
+    );
+    if (container == null) {
+        await ensureGradleDaemon(projectPath, args)
+    }
+}
+
 const ensureGradleDaemon = async (projectPath: string, args: any) => {
     const command = 'tail -f /dev/null';
     await runAContainerInBackground(
@@ -128,11 +145,13 @@ const stopGradleDaemon = async (projectPath: string, args: any) => {
 export {
     ensureKurtosisCli,
     ensureDIVECli,
+    ensureDiveRunning,
     ensureDiveStopped,
     ensureDrogonConfigFolder,
     ensureKurtosisClean,
     ensureKurtosisRunning,
     ensureGradleInDIVEContainer,
     ensureGradleDaemon,
+    ensureGradleDaemonIsRunning,
     stopGradleDaemon
 };
