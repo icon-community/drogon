@@ -156,7 +156,6 @@ export const deployContracts = async (
       command += ` -PkeystorePass=${password}`;
     }
 
-    console.log("Running command: " + command)
     mountAndRunCommandInContainer(
       container,
       args,
