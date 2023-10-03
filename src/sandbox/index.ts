@@ -14,10 +14,11 @@ import {
 import {
   dockerInit,
   mountAndRunCommandInContainer,
+  getDIVEContainerId,
 } from '../helpers/docker';
 import { generateKeystore, runGoloopCmd } from '../goloop';
 import Wallet from '../core/keystore';
-import { ensureKurtosisCli, ensureDIVECli, ensureKurtosisRunning, ensureGradleDaemonIsRunning, ensureDiveRunning, stopGradleDaemon, ensureDiveStopped, ensureKurtosisStopped, getGradeDaemeonContainerId } from '../core/dependencies';
+import { ensureKurtosisCli, ensureDIVECli, ensureKurtosisRunning, ensureGradleDaemonIsRunning, ensureDiveRunning, stopGradleDaemon, ensureDiveStopped, ensureKurtosisStopped, ensureGradleInDIVEContainer } from '../core/dependencies';
 import signale from 'signale';
 
 const sandbox_folder = '.drogon/sandbox';
@@ -228,28 +229,19 @@ export const startSandbox = (projectPath: string, args: any) => {
     .then(() => {
       return ensureDiveRunning()
     })
-    .then(() => {
-      return getGradeDaemeonContainerId(projectPath)
-    })
-    .then((container) => {
-      const command = `GOCHAIN_KEYSTORE=/goloop/app/.drogon/sandbox/keystore.json \
-      GOCHAIN_CONFIG=/goloop/app/.drogon/sandbox/config.json \
-      GOCHAIN_DATA=/goloop/app/.drogon/sandbox/ \
-      /goloop/run.sh`;
-      if(container == null) {
-        throw new Error('Gradle daemon is not running')
+  .then(() => {
+    return ensureGradleInDIVEContainer()
+  })
+  .then(async () => {
+      // docker exec container rsync -avP /temp-test/ /test/
+      const containerId = await getDIVEContainerId()
+      if (!containerId) {
+        signale.fatal('DIVE container not found');
+        process.exit(1);
       }
-      mountAndRunCommandInContainer(
-        container,
-        args,
-        command,
-        (exitCode: number, output: any) => {
-          console.log(output);
-        },
-        true
-      );
-      signale.success('Started sandbox');
-    })
+      const command = `docker exec container rsync -avP /goloop/app/.drogon/sandbox/ /goloop/app/data/single/`;
+
+  })
     .catch(error => {
       signale.error('Failed to start the sandbox:', error);
       process.exit(1);

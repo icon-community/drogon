@@ -72,9 +72,11 @@ export const getDIVEContainerId = async (): Promise<string | null> => {
   }
   return null
 }
+
 export const getKurtosisContainerIds = async () => {
   return  await getContainerIdsFromNamePattern('kurtosis');
 }
+
 export const removeImage = async (imageId: string): Promise<boolean> => {
   const docker = dockerInit();
   const image = await docker.getImage(imageId);
@@ -164,22 +166,28 @@ export const mountAndRunCommandInContainerAsync = (containerName: string,  args:
           } else {
               resolve(output);
           }
-      }, logToStdout);
+      }, logToStdout, "/");
   });
 };
 
 export const mountAndRunCommandInContainer = async (
-  containerName: string,
+  containerName: string|Docker.Container,
   args: any,
   command: string,
   cb: any,
-  logToStdout: boolean
+  logToStdout: boolean,
+  workingDir: string = '/goloop/app'
 ) => {
   const docker = dockerInit();
 
   if (args) command = `${command} ${args.join(' ')}`;
 
-  const container = docker.getContainer(containerName);
+  let container: Docker.Container;
+  if (typeof containerName === 'string') {
+    container = await docker.getContainer(containerName);
+  } else {
+    container = containerName;
+  }
 
   let output = '';
 
@@ -190,7 +198,7 @@ export const mountAndRunCommandInContainer = async (
       AttachStderr: true,
       AttachStdin: true,
       Tty: true,
-      WorkingDir: '/goloop/app/',
+      WorkingDir: workingDir,
       Cmd: ['sh', '-c', command],
     },
     (err: any, exec: any) => {
