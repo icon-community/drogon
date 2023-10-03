@@ -232,16 +232,6 @@ export const startSandbox = (projectPath: string, args: any) => {
   .then(() => {
     return ensureGradleInDIVEContainer()
   })
-  .then(async () => {
-      // docker exec container rsync -avP /temp-test/ /test/
-      const containerId = await getDIVEContainerId()
-      if (!containerId) {
-        signale.fatal('DIVE container not found');
-        process.exit(1);
-      }
-      const command = `docker exec container rsync -avP /goloop/app/.drogon/sandbox/ /goloop/app/data/single/`;
-
-  })
     .catch(error => {
       signale.error('Failed to start the sandbox:', error);
       process.exit(1);
