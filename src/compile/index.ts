@@ -31,7 +31,6 @@ export const mountAndCompile = (projectPath: string, args: any, cb: any) => {
 
   mountAndRunCommandInContainer(
     container,
-    projectPath,
     args,
     command,
     cb,

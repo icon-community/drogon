@@ -1,7 +1,7 @@
 import Docker from 'dockerode';
 import {DROGON_IMAGE} from '../constants';
 import {getContainerNameForProject, panic} from '../helpers';
-import {PassThrough} from 'stream';
+import tar from 'tar-fs';
 
 export const dockerInit = () => {
   return new Docker(); //defaults to above if env variables are not used
@@ -50,6 +50,32 @@ export const localDrogonImageId = async (
   }
   return null;
 };
+export const getContainerIdsFromNamePattern = async (
+  namePattern: string
+): Promise<string[] | null> => {
+  try {
+    const docker = dockerInit();
+    const containers = await docker.listContainers();
+    const matchedContainers = containers.filter(container => 
+      container.Names.some(name => name.includes(namePattern))
+    );
+    return matchedContainers.map(container => container.Id);
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+}
+export const getDIVEContainerId = async (): Promise<string | null> => { 
+  const containers = await getContainerIdsFromNamePattern('icon-node-0xacbc4e');
+  if (containers != null && containers?.length > 0) {
+    return containers[0];
+  }
+  return null
+}
+
+export const getKurtosisContainerIds = async () => {
+  return  await getContainerIdsFromNamePattern('kurtosis');
+}
 
 export const removeImage = async (imageId: string): Promise<boolean> => {
   const docker = dockerInit();
@@ -132,19 +158,36 @@ export const mountAndRunCommand = async (
   );
 };
 
+export const mountAndRunCommandInContainerAsync = (containerName: string,  args: any, command: string, logToStdout: boolean): Promise<any> => {
+  return new Promise((resolve, reject) => {
+      mountAndRunCommandInContainer(containerName, args, command, (exitCode: number, output: any) => {
+          if (exitCode) {
+              reject({ exitCode, output });
+          } else {
+              resolve(output);
+          }
+      }, logToStdout, "/");
+  });
+};
+
 export const mountAndRunCommandInContainer = async (
-  containerName: string,
-  projectPath: string,
+  containerName: string|Docker.Container,
   args: any,
   command: string,
   cb: any,
-  logToStdout: boolean
+  logToStdout: boolean,
+  workingDir: string = '/goloop/app'
 ) => {
   const docker = dockerInit();
 
   if (args) command = `${command} ${args.join(' ')}`;
 
-  const container = docker.getContainer(containerName);
+  let container: Docker.Container;
+  if (typeof containerName === 'string') {
+    container = await docker.getContainer(containerName);
+  } else {
+    container = containerName;
+  }
 
   let output = '';
 
@@ -155,7 +198,7 @@ export const mountAndRunCommandInContainer = async (
       AttachStderr: true,
       AttachStdin: true,
       Tty: true,
-      WorkingDir: '/goloop/app',
+      WorkingDir: workingDir,
       Cmd: ['sh', '-c', command],
     },
     (err: any, exec: any) => {
@@ -188,7 +231,8 @@ export const mountAndRunCommandInContainer = async (
 export async function interactWithDockerContainer(
   containerName: string,
   destination: string,
-  command: string
+  command: string,
+  shoudStartContainer: boolean = true
 ) {
   const docker = new Docker();
   const container = await docker.getContainer(containerName);
@@ -201,8 +245,10 @@ export async function interactWithDockerContainer(
     hijack: true,
   });
 
-  // Start the container
-  await container.start();
+  if(shoudStartContainer === true){
+    // Start the container
+    await container.start();
+  }
 
   // Execute a command in the container
   container.exec(
@@ -255,3 +301,13 @@ export const stopContainerWithName = async (containerName: string) => {
   const container = await docker.getContainer(containerName);
   await container.stop();
 };
+export async function copyToContainer(
+  containerName: string,
+  sourcePath: string,
+  destinationPath: string
+): Promise<void> {
+  const docker = new Docker();
+  const container = docker.getContainer(containerName);
+  const tarStream = tar.pack(sourcePath);
+  await container.putArchive(tarStream, { path: destinationPath });
+}

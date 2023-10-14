@@ -8,10 +8,11 @@ import {
   listOptmizedContracts,
   panic,
 } from '../helpers';
-import {mountAndRunCommandInContainer} from '../helpers/docker';
+import {getDIVEContainerId, mountAndRunCommandInContainer, dockerInit} from '../helpers/docker';
 import {DROGON_IMAGE} from '../constants';
 import Wallet from '../core/keystore';
 import chalk from 'chalk';
+var shell = require('shelljs');
 
 export const deployContracts = async (
   projectPath: string,
@@ -65,37 +66,98 @@ export const deployContracts = async (
   );
   console.log(`Loaded wallet ${chalk.green(wallet.getAddress())}`);
 
-  await wallet.showBalances();
+  // await wallet.showBalances();
 
   signale.pending('Deploying contracts');
 
-  const container = getContainerNameForProject(
-    projectPath,
-    DROGON_IMAGE,
-    'drogon'
-  );
+  // const container = getContainerNameForProject(
+  //   projectPath,
+  //   DROGON_IMAGE,
+  //   'drogon'
+  // );
+
+  const docker = dockerInit();
+  const containerId  = await getDIVEContainerId();
+
+  if (!containerId) {
+    signale.fatal('DIVE container not found');
+    process.exit(1);
+  }
+
+  console.log("Discovered DIVE container: " + containerId)
+  const container = docker.getContainer(containerId);
 
   const projects = await listAvailableContracts(projectPath);
+  const optimized = await listOptmizedContracts(projectPath);
 
   const keys = Object.keys(projects);
   const numProjects = keys.length;
 
   let tasks: any = {};
 
-  for (var i = 0; i < numProjects; i++) {
-    let project = keys[i];
+  mountAndRunCommandInContainer(
+    container,
+    args,
+    "mkdir -p /goloop/app",
+    async (exitCode: any, output: string) => {
+      if (exitCode) {
+        signale.fatal('Failed to deploy contracts');
+        process.exit(exitCode);
+      } else {
+      }
+    },
+    true,
+    "/goloop/"
+  );
 
-    let command = `gradle src:${project}:${destination} -PkeystoreName=/goloop/app/${keystoreFile}`;
+  let j = 0
+  for(var i in optimized) {
+    console.log("Deploying optimized contract: " + i)
+    const path = optimized[i]
+
+    // Copy the optimized contract from host to container
+    signale.pending(`Copying optimized contract ${path} to container`)
+
+    // path without file name
+    const basePath = path.substring(0, path.lastIndexOf("/"))
+    const fileName = path.substring(path.lastIndexOf("/")+1)
+
+    console.log("Copying file " + fileName + " to /goloop/app/" + fileName)
+    console.log("Creating directory " + basePath)
+    let mkdir = `mkdir -p /goloop/app/${basePath}`
+
+    mountAndRunCommandInContainer(
+      container,
+      args,
+      mkdir,
+      async (exitCode: any, output: string) => {
+        if (exitCode) {
+          signale.fatal('Failed to deploy contracts');
+          process.exit(exitCode);
+        }
+      },
+      true
+    );
+
+    const basePath2 = path.split("/").slice(0, 2).join("/") + "/";
+    
+    shell.exec(`docker cp ${projectPath}/${path} ${containerId}:/goloop/app/${path}`, { silent: false })
+    shell.exec(`docker cp ${projectPath}/${basePath2}/build.gradle ${containerId}:/goloop/app/${basePath2}/build.gradle`, { silent: false })
+    shell.exec(`docker cp ${projectPath}/build.gradle ${containerId}:/goloop/app/build.gradle`, { silent: false })
+    shell.exec(`docker cp ${projectPath}/settings.gradle ${containerId}:/goloop/app/settings.gradle`, { silent: false })
+
+    // Deploy the contract
+    let initialWalletBalance = 0
+    let project = keys[j];
+    j = j + 1
+    let command = `/gradle/gradle-5.5.1/bin/gradle src:${project}:${destination} -PkeystoreName=/goloop/app/${keystoreFile}`;
 
     if (password) {
       command += ` -PkeystorePass=${password}`;
     }
 
-    let initialWalletBalance = await wallet.getBalance();
-
     mountAndRunCommandInContainer(
       container,
-      projectPath,
       args,
       command,
       async (exitCode: any, output: string) => {
@@ -103,10 +165,10 @@ export const deployContracts = async (
           signale.fatal('Failed to deploy contracts');
           process.exit(exitCode);
         } else {
-          signale.success(`Done deploying ${project} contract`);
+          signale.success(`Done deploying ${i} contract`);
 
           let currentBalance = await wallet.getBalance();
-          tasks[project] = {
+          tasks[i] = {
             current: currentBalance,
             initial: initialWalletBalance,
           };

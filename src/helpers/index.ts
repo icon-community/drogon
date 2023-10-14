@@ -5,7 +5,7 @@ import chalk from 'chalk';
 import signale from 'signale';
 import path from 'path';
 import crypto from 'crypto';
-
+var shell = require('shelljs');
 export const banner = function () {
   const banner = textSync('Drogon!', {
     font: 'Ghost',
@@ -174,4 +174,20 @@ export const getContainerNameForProject = (
   const projectName = path.basename(projectPath);
   const containerName = `${containerNamePrefix}-${projectName}-${hash}`;
   return containerName;
+};
+
+// introduce an artificial wait in seconds
+export const wait = (seconds: number) => {
+  return new Promise(resolve => setTimeout(resolve, seconds * 1000));
+};
+export const executeShellCommand = (command:string) => {
+  return new Promise((resolve, reject) => {
+    shell.exec(command, (code:any, stdout:any, stderr:any) => {
+      if (code !== 0) {
+        reject(new Error(stderr.toString()));
+      } else {
+        resolve(stdout);
+      }
+    });
+  });
 };

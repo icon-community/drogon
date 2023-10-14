@@ -15,7 +15,6 @@ export const testContracts = (projectPath: string, args: any) => {
   );
   mountAndRunCommandInContainer(
     container,
-    projectPath,
     args,
     command,
     (exitCode: any) => {

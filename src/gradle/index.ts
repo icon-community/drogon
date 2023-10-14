@@ -1,59 +1,60 @@
 import signale from 'signale';
-import {ensureCWDDrogonProject, getContainerNameForProject} from '../helpers';
-import {
-  mountAndRunCommandInContainer,
-  runAContainerInBackground,
-  stopContainerWithName,
-} from '../helpers/docker';
+import { ensureCWDDrogonProject, wait } from '../helpers';
 var shell = require('shelljs');
-import {DROGON_CONFIG_FOLDER} from '../constants';
-import { ensureDIVECli, ensureKurtosisCli, ensureKurtosisRunning} from '../core/dependencies';
+import { DROGON_CONFIG_FOLDER } from '../constants';
+import { ensureDIVECli, ensureGradleDaemonIsRunning, ensureKurtosisCli, ensureKurtosisRunning, stopGradleDaemon } from '../core/dependencies';
 
-export const startDiveDaemon = (projectPath: string, args: any) => {
+export const startDaemons = (projectPath: string, args: any) => {
   ensureCWDDrogonProject(projectPath);
 
   ensureKurtosisCli();
   ensureDIVECli();
 
   ensureKurtosisRunning();
-
-  const command = `${DROGON_CONFIG_FOLDER}/dive chain icon -d`
   signale.pending('Starting Drogon daemon');
 
-  shell.exec(command,(code: any, stdout: any, stderr: any) => {
-    if (code !== 0) {
-      signale.error('Failed to start Drogon daemon');
-      console.log(stderr.toString())
-      process.exit(code);
-    }
-    else {
+  wait(5)
+    .then(() => {
+      return ensureGradleDaemonIsRunning(projectPath, args)
+    })
+    .then(() => {
       signale.success('Started Drogon daemon');
-      process.exit(code);
-    }
-  })
+      process.exit(0);
+    })
+    .catch(error => {
+      signale.error('Error during Drogon daemon start:', error);
+      process.exit(1);
+    });
+
+
 };
 
-export const stopDrogonDaemon = async (projectPath: string, args: any) => {
+export const stopDaemons = async (projectPath: string, args: any) => {
   ensureCWDDrogonProject(projectPath);
-  
-  const diveStop = `${DROGON_CONFIG_FOLDER}/dive clean`
-  signale.pending('Stopping Drogon daemon');
-  await stopTheService(diveStop);
 
-  const kurtosisStop = `${DROGON_CONFIG_FOLDER}/kurtosis engine stop`
-  await stopTheService(kurtosisStop);
-
-  signale.success('Stopped Drogon daemon');
+  try {
+    const diveStop = `${DROGON_CONFIG_FOLDER}/dive clean`
+    signale.pending('Stopping Drogon daemon');
+    await stopTheService(diveStop);
+    await wait(5)
+    const kurtosisStop = `${DROGON_CONFIG_FOLDER}/kurtosis engine stop`
+    await stopTheService(kurtosisStop);
+    await wait(2)
+    await stopGradleDaemon(projectPath, args);
+    signale.success('Stopped Drogon daemon');
+  } catch (error) {
+    console.log(error)
+    signale.fatal('error stopping Drogon daemon');
+  }
 };
 
 
 const stopTheService = async (command: string) => {
-  shell.exec(command,(code: any, stdout: any, stderr: any) => {
+  shell.exec(command, (code: any, stdout: any, stderr: any) => {
+    // console.log(stdout.toString())
+    console.log(stderr.toString())
     if (code !== 0) {
-      process.exit(code);
-    }
-    else {
-      process.exit(code);
+      throw stderr
     }
   })
 }
